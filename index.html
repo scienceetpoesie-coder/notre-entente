@@ -18,11 +18,16 @@ height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Ma
 <!-- NOTE: THIS FILE WAS NOT PRESENT ON THE ORIGINAL CLINTON WHITE HOUSE WEBSITE.  
 IT WAS ADDED 11/21/2014 BY MICHAEL LINGENFELTER AT THE NATIONAL ARCHIVES AND RECORDS ADMINISTRATION -->
 
-<!-- Musique Drive cachée -->
-<iframe src="https://drive.google.com/file/d/1NSSybd9bRiNC1itXnAzvSI3JBELYW3RA/preview"
-  style="display:none; width:0; height:0; border:none;"
-  allow="autoplay">
-</iframe>
+<audio id="bg-music" autoplay loop>
+  <source src="https://github.com/scienceetpoesie-coder/site-internet-science-et-poesie/raw/refs/heads/main/mixkit-relax-beat-292.mp3" type="audio/mpeg">
+</audio>
+<script>
+  const music = document.getElementById('bg-music');
+  music.volume = 0.5;
+  document.addEventListener('click', () => {
+    if (music.paused) music.play();
+  }, { once: true });
+</script>
 
 <font face=tahoma color=#000000>
 <CENTER>
