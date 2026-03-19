@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title> MA PAGE </title>
+    <link rel="icon" href="https://github.com/scienceetpoesie-coder/site-internet-science-et-poesie/raw/refs/heads/main/assets/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+        }
+        .fullscreen {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <img class="fullscreen" src="https://github.com/scienceetpoesie-coder/site-internet-science-et-poesie/blob/main/mur%20brique.png?raw=true" alt="">
+</body>
+</html>
