@@ -18,24 +18,25 @@
       gap: 24px;
     }
     #slot {
-      width: 100%;
+      width: 90vw;
       max-width: 900px;
-      height: 500px;
+      height: 70vh;
       position: relative;
       overflow: hidden;
     }
     #slot img {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       opacity: 0;
     }
     #slot img.visible { opacity: 1; }
     #btn {
       padding: 14px 48px;
       font-size: 18px;
-      font-family: 'Arial', serif;
+      font-family: 'Times New Roman', serif;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       background: transparent;
@@ -44,13 +45,6 @@
       cursor: pointer;
     }
     #btn:hover { background: black; color: white; }
-    #status {
-      color: #aaa;
-      font-family: 'Times New Roman', serif;
-      font-size: 13px;
-      letter-spacing: 0.1em;
-      min-height: 20px;
-    }
   </style>
 </head>
 <body>
@@ -80,15 +74,13 @@
       <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(23).png?raw=true">
       <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(24).png?raw=true">
     </div>
-    <div id="status">Clique pour lancer</div>
-    <button id="btn">LANCER</button>
+    <button id="btn">STOP</button>
   </div>
   <script>
     const imgs = document.querySelectorAll('#slot img');
     const btn = document.getElementById('btn');
-    const status = document.getElementById('status');
     let current = 0;
-    let spinning = false;
+    let spinning = true;
     let timer = null;
 
     function show(i) {
@@ -97,39 +89,27 @@
       imgs[current].classList.add('visible');
     }
 
-  function spin() {
-  if (spinning) { stop(); return; }
-  spinning = true;
-  btn.textContent = 'STOP';
-  status.textContent = '...';
-  function tick() {
-    show(Math.floor(Math.random() * imgs.length));
-    timer = setTimeout(tick, 80);
-  }
-  tick();
-}
+    function tick() {
+      show(Math.floor(Math.random() * imgs.length));
+      timer = setTimeout(tick, 80);
+    }
 
     function stop() {
       spinning = false;
       clearTimeout(timer);
       btn.textContent = 'RELANCER';
-      status.textContent = '';
+      btn.onclick = relaunch;
     }
 
-    btn.addEventListener('click', spin);
+    function relaunch() {
+      spinning = true;
+      btn.textContent = 'STOP';
+      btn.onclick = stop;
+      tick();
+    }
+
+    btn.onclick = stop;
+    tick();
   </script>
 </body>
 </html>
-
-
-function spin() {
-  if (spinning) { stop(); return; }
-  spinning = true;
-  btn.textContent = 'STOP';
-  status.textContent = '...';
-  function tick() {
-    show(Math.floor(Math.random() * imgs.length));
-    timer = setTimeout(tick, 80);
-  }
-  tick();
-}
