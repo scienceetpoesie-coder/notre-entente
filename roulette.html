@@ -97,23 +97,17 @@
       imgs[current].classList.add('visible');
     }
 
-    function spin() {
-      if (spinning) { stop(); return; }
-      spinning = true;
-      btn.textContent = 'STOP';
-      status.textContent = '...';
-      let delay = 80;
-      let count = 0;
-      function tick() {
-        show(Math.floor(Math.random() * imgs.length));
-        count++;
-        if (count < 8) delay = 80;
-        else if (count < 16) delay = 120;
-        else delay = 160;
-        timer = setTimeout(tick, delay);
-      }
-      tick();
-    }
+  function spin() {
+  if (spinning) { stop(); return; }
+  spinning = true;
+  btn.textContent = 'STOP';
+  status.textContent = '...';
+  function tick() {
+    show(Math.floor(Math.random() * imgs.length));
+    timer = setTimeout(tick, 80);
+  }
+  tick();
+}
 
     function stop() {
       spinning = false;
@@ -126,3 +120,16 @@
   </script>
 </body>
 </html>
+
+
+function spin() {
+  if (spinning) { stop(); return; }
+  spinning = true;
+  btn.textContent = 'STOP';
+  status.textContent = '...';
+  function tick() {
+    show(Math.floor(Math.random() * imgs.length));
+    timer = setTimeout(tick, 80);
+  }
+  tick();
+}
