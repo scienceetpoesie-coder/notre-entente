@@ -17,11 +17,11 @@
       margin: 0 auto;
       padding: 60px 70px;
       border: 3px solid #2247B0;
-      line-height: 1.5;
+      line-height: 1.35;
       font-size: 16px;
     }
     h2 {
-      font-size: 18px;
+      font-size: 24px;
       font-weight: bold;
       text-align: center;
       margin-bottom: 40px;
@@ -29,20 +29,20 @@
     }
     p {
       text-align: justify;
-      margin-bottom: 1.4em;
+      margin-bottom: 1.1em;
       text-indent: 2em;
     }
     blockquote {
-      margin: 1.5em 2em;
+      margin: 1.2em 2em;
       font-style: italic;
       text-indent: 0;
     }
     ul {
-      margin: 1em 2em 1.4em 2em;
+      margin: 1em 2em 1.1em 2em;
       list-style: none;
     }
     ul li::before {
-      content: "• ";
+      content: "";
     }
     ul li {
       font-style: italic;
@@ -50,7 +50,7 @@
     }
     .separateur {
       text-align: center;
-      margin: 2em 0;
+      margin: 1.8em 0;
       letter-spacing: 0.3em;
       color: #888;
     }
@@ -58,7 +58,43 @@
       text-align: right;
       margin-top: 2em;
       font-style: italic;
-      font-size: 14px;
+      font-size: 18px;
+    }
+    .image-encadree {
+      display: block;
+      margin: 1.8em auto;
+      max-width: 260px;
+      width: 100%;
+      border: 2px solid #aaaaaa;
+      padding: 6px;
+      background-color: #f5f5f5;
+    }
+    .logos-fin {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 3em;
+      gap: 2.5em;
+    }
+    .logo-petit {
+      max-width: 120px;
+      width: 100%;
+    }
+    .logo-grand {
+      max-width: 200px;
+      width: 100%;
+    }
+    .dense {
+      word-spacing: -0.04em;
+      letter-spacing: -0.012em;
+    }
+    .tres-dense {
+      word-spacing: normal;
+      letter-spacing: normal;
+      max-width: 77%;
+      margin-left: 5%;
+      margin-right: -5%;
+      text-indent: 2em;
     }
     @media (max-width: 600px) {
       .livre { padding: 30px 20px; }
@@ -69,11 +105,17 @@
   <div class="livre">
     <h2>Réconfort du lectorat</h2>
 
-    <p>Rien qui n'ai encore été dit, et encore moins publié, ne permettrais au genre humain de se faire inculquer une vision un minimum biaisée, sur les caractères subalternes de l'immobilité Flodiène. Ils auraient pu aller s'investir aux embouchures des vieux libertinages, ne consistant en une question tronquée sur les amas se condensant sans qu'on ait à forcer chez nous, ni de jugement trop à l'emporte-pièce quant les gains que l'humanité saurait en tirer. Cela non parce que Floda évoquait dans la dentelle son envie de traduire ce livre dans toutes les langues : <em>Nia Interkonsento</em> (Notre Entente), les pdf imprimés qui, dans le monde de la micro-édition, firent tout de même un flop, et n'eurent aucune influence sur le cours du monde, si peu qu'il ne faut, pour en inhumer l'antilogue, se projeter vers les derniers numéros du pif gadget.</p>
+    <p class="dense">Rien qui n'ai encore été dit, et encore moins publié, ne permettrais au genre humain de se faire inculquer une vision un minimum biaisée, sur les caractères subalternes de l'immobilité Flodiène. Ils auraient pu aller s'investir aux embouchures des vieux libertinages, ne consistant en une question tronquée sur les amas se condensant sans qu'on ait à forcer chez nous, ni de jugement trop à l'emporte-pièce quant les gains que l'humanité saurait en tirer. Cela non parce que Floda évoquait dans la dentelle son envie de traduire ce livre dans toutes les langues : <em>Nia Interkonsento</em> (Notre Entente), les pdf imprimés qui, dans le monde de la micro-édition, firent tout de même un flop, et n'eurent aucune influence sur le cours du monde, si peu qu'il ne faut, pour en inhumer l'antilogue, se projeter vers les derniers numéros du pif gadget.</p>
 
-    <p>Vous vous dites sûrement qu'il ne servirait à rien de plier à ce caprice, sans aucun danger pour vous ni les hospices millénaires dont vous avez coupé les subventions, inconséquence de votre fatalisme. Vous ne lirez donc pas, en vous trouvant des excuses, l'interprétation fragmentaire de la blague à rallonge de Floda.</p>
+    <p class="tres-dense">Vous vous dites sûrement qu'il ne servirait à rien de plier à ce caprice, sans aucun danger pour vous ni les hospices millénaires dont vous avez coupé les subventions, inconséquence de votre fatalisme. Vous ne lirez donc pas, en vous trouvant des excuses, l'interprétation fragmentaire de la blague à rallonge de Floda.</p>
 
     <p>Et votre léthargie est parfaitement compréhensible : vous faites les preuves du frotte-cuir et du tramway de Shanghaï ; vous reprenez à votre compte aux promoteurs multinationaux un apocryphe qui, en accord avec le credo du Bouc émissaire, vous dispense de l'avoir dans vos bibliothèques. Pour lui donner toute sa valeur esthétique, vous avez pratiqué tous les raccordements de votre palais mental, vous en avez expurgé les paragraphes qui vont contre vos intérêts et aussi les aphorismes, les excursus et les fines réparties qui laissent de marbre votre inintelligible et digressif hémisphère droit.</p>
+
+    <img
+      src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/brain.png?raw=true"
+      alt="Illustration cerveau"
+      class="image-encadree"
+    >
 
     <p>Pour des raisons connexes, vous vous êtes autorisé à exclure de vos pensées les réminiscences et sous-entendus de circonstance. Les passages en italiques ont été rajoutés à l'édition française. La version originale n'étant publiée nul part, encore moins chez Flammarion Ashgabat en 2053, vous tirez vers vous la couverture : on s'en est taillé un short ; vous n'aviez pas prévu l'apologie policée qui n'est à la portée de tous pendant la lecture de Notre Entente dans le monde et sur l'inintérêt de la prosopopée :</p>
 
@@ -106,6 +148,19 @@
     <p>Cette image confuse ne sera pas la vôtre.</p>
 
     <div class="signature">Le F.C.V.</div>
+
+    <div class="logos-fin">
+      <img
+        src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/logo.jpg?raw=true"
+        alt="Logo"
+        class="logo-petit"
+      >
+      <img
+        src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/house.jpg?raw=true"
+        alt="House"
+        class="logo-grand"
+      >
+    </div>
 
   </div>
 </body>
