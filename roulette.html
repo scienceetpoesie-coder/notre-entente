@@ -1,115 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <title>Roulette</title>
-  <link rel="icon" href="https://github.com/scienceetpoesie-coder/notre-entente/raw/refs/heads/main/assets/favicon.ico" type="image/x-icon">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #fff; }
-    #roulette-wrap {
-      background: #fff;
-      width: 100vw;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-    }
-    #slot {
-      width: 90vw;
-      max-width: 900px;
-      height: 70vh;
-      position: relative;
-      overflow: hidden;
-    }
-    #slot img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      opacity: 0;
-    }
-    #slot img.visible { opacity: 1; }
-    #btn {
-      padding: 14px 48px;
-      font-size: 18px;
-      font-family: 'Times New Roman', serif;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      background: transparent;
-      color: black;
-      border: 2px solid black;
-      cursor: pointer;
-    }
-    #btn:hover { background: black; color: white; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapitres</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2.5rem 2rem;
+  }
+
+  nav {
+    font-family: 'Book Antiqua', 'Palatino Linotype', Palatino, Georgia, serif;
+    max-width: 720px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #aaaaaa;
+    margin-bottom: 1.4rem;
+    font-family: 'Book Antiqua', 'Palatino Linotype', Palatino, Georgia, serif;
+    font-weight: normal;
+    text-align: center;
+  }
+
+  .chapter-line {
+    display: block;
+    padding: 0.32rem 0;
+    font-size: 17px;
+    font-weight: bold;
+    line-height: 1.45;
+    font-family: 'Book Antiqua', 'Palatino Linotype', Palatino, Georgia, serif;
+  }
+
+  .chapter-line a {
+    display: inline-grid;
+    grid-template-columns: 3rem 1fr;
+    align-items: baseline;
+    text-decoration: none;
+    color: #0033bb;
+    font-weight: bold;
+    transition: color 0.18s ease;
+    width: 100%;
+  }
+
+  .chapter-line a .num {
+    font-size: 13px;
+    color: #0033bb;
+    font-weight: bold;
+    transition: color 0.18s ease;
+    padding-top: 1px;
+  }
+
+  .chapter-line a .label {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.18s ease;
+  }
+
+  .chapter-line a:hover,
+  .chapter-line a:hover .num,
+  .chapter-line a:hover .label {
+    color: #dd1100;
+  }
+</style>
 </head>
 <body>
-  <div id="roulette-wrap">
-    <div id="slot">
-      <img class="visible" src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(1).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(2).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(3).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(4).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(5).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(6).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(7).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(8).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(9).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(10).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(11).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(12).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(13).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(14).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(15).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(16).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(17).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(18).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(19).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(20).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(22).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(23).png?raw=true">
-      <img src="https://github.com/scienceetpoesie-coder/notre-entente/blob/main/assets/batiment%20d%C3%A9truit/batiment%20d%C3%A9truit%20NE%20(24).png?raw=true">
-    </div>
-    <button id="btn">STOP</button>
-  </div>
-  <script>
-    const imgs = document.querySelectorAll('#slot img');
-    const btn = document.getElementById('btn');
-    let current = 0;
-    let spinning = true;
-    let timer = null;
+<nav>
+  <p class="toc-title">Chapitres</p>
 
-    function show(i) {
-      imgs[current].classList.remove('visible');
-      current = i % imgs.length;
-      imgs[current].classList.add('visible');
-    }
-
-    function tick() {
-      show(Math.floor(Math.random() * imgs.length));
-      timer = setTimeout(tick, 80);
-    }
-
-    function stop() {
-      spinning = false;
-      clearTimeout(timer);
-      btn.textContent = 'RELANCER';
-      btn.onclick = relaunch;
-    }
-
-    function relaunch() {
-      spinning = true;
-      btn.textContent = 'STOP';
-      btn.onclick = stop;
-      tick();
-    }
-
-    btn.onclick = stop;
-    tick();
-  </script>
+  <div class="chapter-line"><a href="#"><span class="num">I.</span><span class="label">L'E.p.h.a.d. érotique</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">II.</span><span class="label">Journée de lobotomie et de joie à Struisbaai</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">III.</span><span class="label">Inconsidérations relativistes singulières décorrélées de notre refuge à Struisbaai</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">IV.</span><span class="label">Rome*</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">V.</span><span class="label">Le Rallye Monte-Carlo</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">VI.</span><span class="label">Les Hiéroglyphes de la concorde</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">VII.</span><span class="label">L'Âge de Glace</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">VIII.</span><span class="label">La Fin de notre inactivité nihiliste</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">IX.</span><span class="label">L'Émeute Bourgeoise Internationale</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">X.</span><span class="label">Les effets du Triomphe</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">XI.</span><span class="label">Saluran pembuangan dan warnanya — L'Égout et les couleurs</span></a></div>
+  <div class="chapter-line"><a href="#"><span class="num">XII.</span><span class="label">La dernière boucle régressive de l'émeute bourgeoise internationale financière mondialisée</span></a></div>
+</nav>
 </body>
 </html>
