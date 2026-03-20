@@ -43,9 +43,7 @@
       width: 120px;
       flex-shrink: 0;
     }
-    .slider-row input[type=range] {
-      flex: 1;
-    }
+    .slider-row input[type=range] { flex: 1; }
     .slider-row span {
       font-size: 13px;
       color: #333;
@@ -65,7 +63,7 @@
     <div class="slider-row">
       <label>Vitesse</label>
       <input type="range" id="spd" min="0" max="10" step="0.1" value="3">
-      <span id="spdVal">3</span>
+      <span id="spdVal">3.0</span>
     </div>
     <div class="slider-row">
       <label>Amplitude</label>
@@ -164,9 +162,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 const img = new Image();
 img.crossOrigin = 'anonymous';
 img.src = 'https://github.com/scienceetpoesie-coder/notre-entente/blob/main/steiniger_johannes_gross.jpg?raw=true';
-img.onerror = () => {
-  img.src = 'https://github.com/scienceetpoesie-coder/notre-entente/blob/main/steiniger_johannes_gross.jpg?raw=true';
-};
+img.onerror = () => { console.log('image non trouvée'); };
 img.onload = () => {
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
