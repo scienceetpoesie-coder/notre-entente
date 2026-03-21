@@ -398,7 +398,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
-function loadImage(index) {
+function loadImage(index, applyDefaults) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.src = images[index].url;
@@ -409,17 +409,19 @@ function loadImage(index) {
   currentScaleXOffset = images[index].scaleXOffset || 0;
   document.getElementById('imgLabel').textContent = images[index].name;
 
-  // Appliquer les paramètres de l'image, ou les défauts globaux
-  const params = Object.assign({}, DEFAULT_PARAMS, images[index].defaults || {});
-  applyParams(params);
+  // Appliquer les paramètres uniquement si demandé (chargement initial)
+  if (applyDefaults) {
+    const params = Object.assign({}, DEFAULT_PARAMS, images[index].defaults || {});
+    applyParams(params);
+  }
 }
 
 document.getElementById('imgBtn').onclick = () => {
   imgIndex = (imgIndex + 1) % images.length;
-  loadImage(imgIndex);
+  loadImage(imgIndex, false);
 };
 
-loadImage(imgIndex);
+loadImage(imgIndex, true);
 
 let noiseT = 0;
 function loop() {
