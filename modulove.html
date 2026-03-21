@@ -181,11 +181,43 @@ canvas {
 </div>
 
 <script>
+const DEFAULT_PARAMS = {
+  scaleY: 1.00,
+  scaleX: 1.45,
+  rep: 7,
+  spd: 3,
+  amp: 0.04,
+  dir: 1,   // 1 = Y, 0 = X
+  chaos: 0
+};
+
 const images = [
-  { url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Stephane-Ravier.png', name: 'Stéphane Ravier', scaleXOffset: -0.30 },
-  { url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/steiniger_johannes_gross.jpg', name: 'Johannes Steiniger' },
-  { url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Christoph_Blocher_(Bundesrat,_2004).jpg', name: 'Christoph Blocher' },
-  { url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Gilles-Lellouche.png', name: 'Gilles Lellouche' },
+  {
+    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Stephane-Ravier.png',
+    name: 'Stéphane Ravier',
+    scaleXOffset: -0.30
+  },
+  {
+    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/steiniger_johannes_gross.jpg',
+    name: 'Johannes Steiniger'
+  },
+  {
+    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Christoph_Blocher_(Bundesrat,_2004).jpg',
+    name: 'Christoph Blocher',
+    defaults: {
+      scaleY: 1.34,
+      scaleX: 1.11,
+      rep: 10,
+      spd: 0.6,
+      amp: 0.12,
+      dir: 0,   // X
+      chaos: 0
+    }
+  },
+  {
+    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Gilles-Lellouche.png',
+    name: 'Gilles Lellouche'
+  },
 ];
 
 const LELLOUCHE = 3;
@@ -304,8 +336,32 @@ const uScaleX       = gl.getUniformLocation(prog, 'u_scaleX');
 const uScaleY       = gl.getUniformLocation(prog, 'u_scaleY');
 const uScaleXOffset = gl.getUniformLocation(prog, 'u_scaleXOffset');
 
-let rep = 7, spd = 3, amp = 0.04, dir = 1, chaos = 0, scaleX = 1.45, scaleY = 1.0;
+let rep, spd, amp, dir, chaos, scaleX, scaleY;
 let currentScaleXOffset = 0;
+
+function applyParams(p) {
+  scaleY = p.scaleY;
+  scaleX = p.scaleX;
+  rep    = p.rep;
+  spd    = p.spd;
+  amp    = p.amp;
+  dir    = p.dir;
+  chaos  = p.chaos;
+
+  document.getElementById('scaleY').value       = scaleY;
+  document.getElementById('scaleYVal').textContent = scaleY.toFixed(2);
+  document.getElementById('scaleX').value       = scaleX;
+  document.getElementById('scaleXVal').textContent = scaleX.toFixed(2);
+  document.getElementById('rep').value          = rep;
+  document.getElementById('repVal').textContent = rep;
+  document.getElementById('spd').value          = spd;
+  document.getElementById('spdVal').textContent = spd.toFixed(1);
+  document.getElementById('amp').value          = amp;
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+  document.getElementById('dirBtn').textContent = dir < 0.5 ? 'X' : 'Y';
+  document.getElementById('randomSlider').value = chaos;
+  document.getElementById('randomVal').textContent = chaos.toFixed(2);
+}
 
 document.getElementById('rep').oninput = e => {
   rep = +e.target.value;
@@ -352,6 +408,10 @@ function loadImage(index) {
   };
   currentScaleXOffset = images[index].scaleXOffset || 0;
   document.getElementById('imgLabel').textContent = images[index].name;
+
+  // Appliquer les paramètres de l'image, ou les défauts globaux
+  const params = Object.assign({}, DEFAULT_PARAMS, images[index].defaults || {});
+  applyParams(params);
 }
 
 document.getElementById('imgBtn').onclick = () => {
