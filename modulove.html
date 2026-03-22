@@ -82,13 +82,27 @@ canvas { display:block; width:720px; height:480px; flex-shrink:0; }
 <script>
 var DEF = { scaleY:1.00, scaleX:1.45, rep:7, spd:3, amp:0.04, dir:1, chaos:0 };
 
-var BASE = 'https://raw.githubusercontent.com/scienceetpoesie/notre-entente/modulove portaits/';
+var BASE = 'https://raw.githubusercontent.com/scienceetpoesie/notre-entente/main/modulove%20portaits/';
+
 var images = [
-  { url:BASE+'Stephane-Ravier.png',                    name:'Ravier',    synth:'ravier',    defaults:{scaleY:0.99,scaleX:0.67,rep:9.5,spd:6.6,amp:0.07,dir:1,chaos:0} },
-  { url:BASE+'steiniger_johannes_gross.jpg',            name:'Steiniger', synth:'steiniger', defaults:{} },
-  { url:BASE+'VAl.jpg',                      name:'Phillipe Val',       synth:'val',       defaults:{} },
-  { url:BASE+'Christoph_Blocher_(Bundesrat,_2004).jpg', name:'Blocher',  synth:'blocher',   defaults:{scaleY:1.34,scaleX:1.11,rep:10,spd:0.6,amp:0.12,dir:0,chaos:0} },
-  { url:BASE+'Gilles-Lellouche.png',                    name:'Lellouche',   synth:'lellouche', defaults:{} },
+  { url:BASE+'Stephane-Ravier.png',
+    name:'Stéphane Ravier', synth:'ravier',
+    defaults:{scaleY:0.99,scaleX:0.67,rep:9.5,spd:6.6,amp:0.07,dir:1,chaos:0} },
+  { url:BASE+'steiniger_johannes_gross.jpg',
+    name:'Johannes Steiniger', synth:'steiniger',
+    defaults:{} },
+  { url:BASE+'VAl.jpg',
+    name:'Philippe Val', synth:'val',
+    defaults:{} },
+  { url:BASE+'Christoph_Blocher_(Bundesrat,_2004).jpg',
+    name:'Christoph Blocher', synth:'blocher',
+    defaults:{scaleY:1.34,scaleX:1.11,rep:10,spd:0.6,amp:0.12,dir:0,chaos:0} },
+  { url:BASE+'Gilles-Lellouche.png',
+    name:'Gilles Lellouche', synth:'lellouche',
+    defaults:{} },
+  { url:BASE+'Beigbeder.jpg',
+    name:'Frédéric Beigbeder', synth:'beigbeder',
+    defaults:{scaleY:1.10,scaleX:1.20,rep:5,spd:1.2,amp:0.06,dir:0,chaos:0.08} },
 ];
 
 var imgIndex = 0;
@@ -135,38 +149,26 @@ float vnoise(vec2 p){
 void main(){
   vec2 uv = v_uv;
 
-  /* ── onde principale ── */
   if(u_dir < 0.5){
     uv.y += sin(uv.x * u_rep + u_time * u_spd) * u_amp;
   } else {
     uv.x += sin(uv.y * u_rep + u_time * u_spd) * u_amp;
   }
 
-  /* ── chaos organique : warp nul aux bords, maximal au centre ──
-     Le masque de vignette empêche tout débordement sur le fond blanc.
-     Les pixels de contour restent ancrés ; seul l'intérieur « bout ». */
   if(u_chaos > 0.0){
-    /* vignette : 0 sur les bords, 1 au centre — marge de 12% */
     float m = 0.12;
     float vx = smoothstep(0.0, m, uv.x) * smoothstep(0.0, m, 1.0 - uv.x);
     float vy = smoothstep(0.0, m, uv.y) * smoothstep(0.0, m, 1.0 - uv.y);
     float vign = vx * vy;
-
     float amount = u_chaos * u_chaos * 0.44 * vign;
-
-    /* couche 1 : grandes ondulations lentes */
     float nx1 = vnoise(uv * 1.8 + vec2(u_time * 0.10, 0.0)) - 0.5;
     float ny1 = vnoise(uv * 1.8 + vec2(0.0, u_time * 0.12) + vec2(3.7,8.2)) - 0.5;
-    /* couche 2 : frémissements plus rapides */
     float nx2 = vnoise(uv * 5.0 + vec2(-u_time*0.24, u_time*0.17) + vec2(1.3,4.1)) - 0.5;
     float ny2 = vnoise(uv * 5.0 + vec2(u_time*0.20,-u_time*0.14) + vec2(6.6,2.9)) - 0.5;
-
     vec2 d = vec2(nx1,ny1)*0.72 + vec2(nx2,ny2)*0.32;
     uv += d * amount;
   }
 
-  /* pas de masque de découpe : on clamp et on laisse les bords s'étirer
-     naturellement grâce à la vignette — pas de fond blanc visible */
   vec4 col = texture2D(u_tex, clamp(uv, 0.0, 1.0));
   gl_FragColor = col;
 }`;
@@ -232,6 +234,7 @@ function applyParams(p){
   document.getElementById('dirBtn').textContent=gDir<0.5?'X':'Y';
   document.getElementById('randomSlider').value=gChaos;  document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);
 }
+
 document.getElementById('rep').oninput          = function(e){ gRep   =+e.target.value; document.getElementById('repVal').textContent   =(+gRep).toFixed(1);    };
 document.getElementById('spd').oninput          = function(e){ gSpd   =+e.target.value; document.getElementById('spdVal').textContent   =(+gSpd).toFixed(1);    };
 document.getElementById('amp').oninput          = function(e){ gAmp   =+e.target.value; document.getElementById('ampVal').textContent   =(+gAmp).toFixed(2);    };
@@ -248,15 +251,12 @@ document.getElementById('imgBtn').onclick = function(){ imgIndex=(imgIndex+1)%im
 /* ══════════════════════════════════════════════
    Audio — utilitaires
 ══════════════════════════════════════════════ */
-
-/* Crée une courbe de forme d'onde pour WaveShaper (tanh doux) */
 function tanhCurve(amount){
   var c=new Float32Array(512);
   for(var i=0;i<512;i++){ var x=i/256-1; c[i]=Math.tanh(x*amount)*0.88; }
   return c;
 }
 
-/* S&H : ConstantSourceNode mis à jour périodiquement, lissage exp */
 function makeSH(rate, outGain){
   if(!actx||!actx.createConstantSource) return null;
   var src=actx.createConstantSource();
@@ -269,24 +269,6 @@ function makeSH(rate, outGain){
     try{ src.offset.setTargetAtTime(cur,actx.currentTime,0.07); }catch(e){}
   }, Math.round(1000/Math.max(0.05,rate)));
   return { node:gain, src:src, stop:function(){ clearInterval(iv); try{src.stop();}catch(e){} } };
-}
-
-/* Ring mod : multiplie deux signaux audio via GainNode (WebAudio natif) */
-function makeRingMod(srcA, srcB, outNode){
-  /* WebAudio n'a pas de multiplieur natif explicite mais on peut :
-     créer un GainNode dont le gain est modulé par srcB,
-     et y injecter srcA — c'est la ring mod standard */
-  var g = actx.createGain(); g.gain.value = 0;
-  srcA.connect(g);
-  srcB.connect(g.gain);
-  g.connect(outNode);
-  return g;
-}
-
-function mkNoiseBuf(){
-  var len=actx.sampleRate*2, nb=actx.createBuffer(1,len,actx.sampleRate), d=nb.getChannelData(0);
-  for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
-  return nb;
 }
 
 function disposeNodes(){
@@ -303,18 +285,14 @@ function rebuildPatch(name){
   if(!actx||!synthOn) return;
   disposeNodes();
   var dst=masterGain, now=actx.currentTime;
-  var inv=(gDir<0.5); /* Y=normal, X=forme d'onde alternative */
+  var inv=(gDir<0.5);
 
   /* ────────────────────────────────────────────
      RAVIER — FM 2-op
-     Y : carrier triangle, mod square  → cuivré, harangue
-     X : carrier sine,     mod triangle → plus doux, spectral
   ──────────────────────────────────────────── */
   if(name==='ravier'){
-    var carrier = actx.createOscillator();
-    carrier.type = inv ? 'sine' : 'triangle';
-    var modOsc  = actx.createOscillator();
-    modOsc.type = inv ? 'triangle' : 'square';
+    var carrier = actx.createOscillator(); carrier.type = inv ? 'sine' : 'triangle';
+    var modOsc  = actx.createOscillator(); modOsc.type = inv ? 'triangle' : 'square';
     var modGain = actx.createGain();
     var carGain = actx.createGain(); carGain.gain.value=0.40;
     var lfo     = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=3.2;
@@ -347,18 +325,12 @@ function rebuildPatch(name){
 
   /* ────────────────────────────────────────────
      STEINIGER — Ring mod
-     Deux oscillateurs légèrement désaccordés multipliés.
-     Produit des bandes latérales métalliques, rigides.
-     Y : square × square  → tranchant, parlementaire
-     X : triangle × sine  → plus rond, presque voix
   ──────────────────────────────────────────── */
   } else if(name==='steiniger'){
     var oA = actx.createOscillator(); oA.type = inv?'triangle':'square';
     var oB = actx.createOscillator(); oB.type = inv?'sine':'square';
-    /* ring mod : oA modulé en amplitude par oB */
     var ringG = actx.createGain(); ringG.gain.value=0;
     oA.connect(ringG); oB.connect(ringG.gain);
-    /* mix du carrier direct + ring */
     var mix   = actx.createGain(); mix.gain.value=0.36;
     var filt  = actx.createBiquadFilter(); filt.type='bandpass'; filt.Q.value=inv?1.5:2.2;
     var lfo   = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.25;
@@ -375,7 +347,6 @@ function rebuildPatch(name){
 
     updateFn=function(){
       var t=actx.currentTime, fc=55*Math.pow(2,gRep/12);
-      /* désaccord : oA à fc, oB légèrement au-dessus → battements */
       var ratio = 1 + (0.5+gSpd*0.35)*0.04;
       oA.frequency.setTargetAtTime(fc,t,.10);
       oB.frequency.setTargetAtTime(fc*ratio,t,.10);
@@ -391,18 +362,13 @@ function rebuildPatch(name){
       inv?'patch : ring mod · rond · presque voix':'patch : ring mod · métallique · parlementaire';
 
   /* ────────────────────────────────────────────
-     VAL — Cross mod (modulation croisée de fréquence)
-     oA module la fréquence de oB ET oB module celle de oA.
-     Instable, imprévisible, rhétorique qui se contredit.
-     Y : sawtooth × triangle  → dense, discursif
-     X : sine × sine          → plus pur, presque sinusoïdal au début
-                                 mais très instable dès que les gains montent
+     VAL — Cross mod
   ──────────────────────────────────────────── */
   } else if(name==='val'){
     var oA  = actx.createOscillator(); oA.type = inv?'sine':'sawtooth';
     var oB  = actx.createOscillator(); oB.type = inv?'sine':'triangle';
-    var gAB = actx.createGain(); gAB.gain.value=0; /* oA→freq(oB) */
-    var gBA = actx.createGain(); gBA.gain.value=0; /* oB→freq(oA) */
+    var gAB = actx.createGain(); gAB.gain.value=0;
+    var gBA = actx.createGain(); gBA.gain.value=0;
     var outA = actx.createGain(); outA.gain.value=0.22;
     var outB = actx.createGain(); outB.gain.value=0.22;
     var filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=2.5;
@@ -410,7 +376,6 @@ function rebuildPatch(name){
     var lfoG = actx.createGain(); lfoG.gain.value=0;
     var sh   = makeSH(1+gChaos*5, 0);
 
-    /* cross mod : A module B, B module A */
     oA.connect(gAB); gAB.connect(oB.frequency);
     oB.connect(gBA); gBA.connect(oA.frequency);
     oA.connect(outA); oB.connect(outB);
@@ -424,10 +389,8 @@ function rebuildPatch(name){
 
     updateFn=function(){
       var t=actx.currentTime, fc=55*Math.pow(2,gRep/12);
-      /* ratio légèrement non-entier pour l'inharmonicité */
       oA.frequency.setTargetAtTime(fc,t,.10);
-      oB.frequency.setTargetAtTime(fc*1.618,t,.10); /* nombre d'or → jamais vraiment harmonique */
-      /* index de cross mod : monte vite, source d'instabilité contrôlée */
+      oB.frequency.setTargetAtTime(fc*1.618,t,.10);
       var idx=fc*(0.15+gSpd*0.18+gChaos*1.8);
       gAB.gain.setTargetAtTime(idx,t,.08);
       gBA.gain.setTargetAtTime(idx*0.7,t,.08);
@@ -441,27 +404,19 @@ function rebuildPatch(name){
       inv?'patch : cross mod · sinusoïdal · instable':'patch : cross mod · inharmonique · rhétorique';
 
   /* ────────────────────────────────────────────
-     BLOCHER — Sub pure + ring mod très basse fréquence
-     Sub grave + ring mod lente qui crée des battements telluriques.
-     Y : sine sub + ring mod lente (battements lents, massif)
-     X : triangle sub + ring mod plus rapide (grondement actif)
+     BLOCHER — Sub + ring mod tellurique
   ──────────────────────────────────────────── */
   } else if(name==='blocher'){
     var sub  = actx.createOscillator(); sub.type = inv?'triangle':'sine';
     var subG = actx.createGain(); subG.gain.value=0.48;
-
-    /* ring mod très basse fréquence : osc à fc+quelques Hz → battements */
     var ringOsc = actx.createOscillator(); ringOsc.type='sine';
     var ringG   = actx.createGain(); ringG.gain.value=0;
     sub.connect(ringG); ringOsc.connect(ringG.gain);
     var ringOut = actx.createGain(); ringOut.gain.value=0.28;
     ringG.connect(ringOut);
-
-    /* sub direct + ring mix → filtre passe-bas très grave */
     var comb = actx.createBiquadFilter();
     comb.type = inv?'bandpass':'lowpass';
     comb.frequency.value=inv?180:260; comb.Q.value=inv?1.2:2.0;
-
     var lfo  = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.04;
     var lfoG = actx.createGain(); lfoG.gain.value=0;
     var sh   = makeSH(0.4+gChaos*2.5, 0);
@@ -478,7 +433,6 @@ function rebuildPatch(name){
     updateFn=function(){
       var t=actx.currentTime, fc=28*Math.pow(2,gRep/18);
       sub.frequency.setTargetAtTime(fc,t,.35);
-      /* ring osc très proche de fc → battements lents */
       var beatFreq = inv ? (2.5+gSpd*1.2) : (0.8+gSpd*0.5);
       ringOsc.frequency.setTargetAtTime(fc+beatFreq,t,.30);
       ringOut.gain.setTargetAtTime(0.15+gAmp*0.6,t,.15);
@@ -493,13 +447,11 @@ function rebuildPatch(name){
 
   /* ────────────────────────────────────────────
      LELLOUCHE — FM 3-op feedback
-     Y : sawtooth→triangle→sine→carrier (chaîne ascendante, cinématique)
-     X : sine→sine→sine→carrier (plus pur au départ, bascule vite en chaos)
   ──────────────────────────────────────────── */
   } else if(name==='lellouche'){
     var op1 = actx.createOscillator(); op1.type = inv?'sine':'sawtooth';
     var op2 = actx.createOscillator(); op2.type = inv?'sine':'triangle';
-    var op3 = actx.createOscillator(); op3.type = inv?'sine':'sine';
+    var op3 = actx.createOscillator(); op3.type='sine';
     var car = actx.createOscillator(); car.type='sine';
     var g1  = actx.createGain(); g1.gain.value=0;
     var g2  = actx.createGain(); g2.gain.value=0;
@@ -515,7 +467,7 @@ function rebuildPatch(name){
     op2.connect(g2); g2.connect(op3.frequency);
     op3.connect(g3); g3.connect(car.frequency);
     car.connect(gCar);
-    op1.connect(fbG); fbG.connect(op1.frequency); /* feedback op1 sur lui-même */
+    op1.connect(fbG); fbG.connect(op1.frequency);
     lfo.connect(lfoM); lfoM.connect(g1.gain); lfoM.connect(g2.gain); lfoM.connect(g3.gain);
     if(sh){ sh.node.connect(g1.gain); sh.node.connect(g2.gain); }
     gCar.connect(filt); filt.connect(dst);
@@ -533,7 +485,6 @@ function rebuildPatch(name){
       g1.gain.setTargetAtTime(idx,t,.08); g2.gain.setTargetAtTime(idx*.58,t,.08); g3.gain.setTargetAtTime(idx*.28,t,.08);
       lfo.frequency.setTargetAtTime(0.2+gSpd*0.17,t,.10);
       lfoM.gain.setTargetAtTime(gAmp*idx*1.4,t,.05);
-      /* feedback : plus fort en mode X (sine) car le sin pur s'emballe plus vite */
       fbG.gain.setTargetAtTime(inv?(gChaos*0.55):(gChaos*0.38),t,.10);
       filt.frequency.setTargetAtTime(280+gScaleY*2700,t,.10);
       filt.Q.setTargetAtTime(1.4+gChaos*8,t,.10);
@@ -541,6 +492,93 @@ function rebuildPatch(name){
     };
     document.getElementById('synthInfo').textContent=
       inv?'patch : fm 3-op sine · pur→chaos · charnel':'patch : fm 3-op · cinématique · ascendant';
+
+  /* ────────────────────────────────────────────
+     BEIGBEDER — Drone mélancolique
+     Deux oscillateurs accordés en quinte, très légèrement désaccordés,
+     qui flottent l'un par rapport à l'autre — battements lents comme
+     une pensée qui revient sur elle-même. Un LFO très lent fait tanguer
+     le filtre comme un verre à moitié plein. Reverb simulée par allpass.
+     X (défaut) : sine + triangle, filtre passe-haut, flottant, amer
+     Y            : sawtooth étouffé, plus dense, plus noyé
+  ──────────────────────────────────────────── */
+  } else if(name==='beigbeder'){
+    /* drone principal */
+    var oA = actx.createOscillator(); oA.type = inv?'sawtooth':'sine';
+    var oB = actx.createOscillator(); oB.type = inv?'sawtooth':'triangle';
+    /* léger désaccord → battements lents, mélancoliques */
+    var gA = actx.createGain(); gA.gain.value = inv?0.18:0.22;
+    var gB = actx.createGain(); gB.gain.value = inv?0.14:0.18;
+
+    /* harmonique haute, très douce — la nostalgie du passé */
+    var oC = actx.createOscillator(); oC.type = 'sine';
+    var gC = actx.createGain(); gC.gain.value = 0.07;
+
+    /* LFO très lent — la houle alcoolisée */
+    var lfo  = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.05;
+    var lfoA = actx.createGain(); lfoA.gain.value=0; /* → filtre */
+    var lfoB = actx.createGain(); lfoB.gain.value=0; /* → gain général, souffle */
+
+    /* filtre : highpass en X (flottant), lowpass en Y (noyé) */
+    var filt = actx.createBiquadFilter();
+    filt.type = inv?'lowpass':'highpass';
+    filt.Q.value = inv?1.2:0.8;
+
+    /* allpass × 2 pour simuler un espace, une réverb de chambre d'hôtel */
+    var ap1 = actx.createBiquadFilter(); ap1.type='allpass'; ap1.frequency.value=800;  ap1.Q.value=4;
+    var ap2 = actx.createBiquadFilter(); ap2.type='allpass'; ap2.frequency.value=1600; ap2.Q.value=3;
+
+    /* WaveShaper très doux — juste ce qu'il faut d'amertume */
+    var shape = actx.createWaveShaper(); shape.curve=tanhCurve(inv?0.6:0.4);
+
+    /* gain de sortie */
+    var outG = actx.createGain(); outG.gain.value=0.38;
+
+    /* S&H très lent — pensée qui dérive */
+    var sh = makeSH(0.3+gChaos*1.5, 0);
+
+    /* routage */
+    oA.connect(gA); oB.connect(gB); oC.connect(gC);
+    gA.connect(filt); gB.connect(filt); gC.connect(filt);
+    lfo.connect(lfoA); lfoA.connect(filt.frequency);
+    lfo.connect(lfoB); lfoB.connect(outG.gain);
+    if(sh) sh.node.connect(oA.detune);
+    filt.connect(ap1); ap1.connect(ap2); ap2.connect(shape); shape.connect(outG); outG.connect(dst);
+
+    oA.start(now); oB.start(now); oC.start(now); lfo.start(now);
+    patchNodes=[oA,oB,oC,lfo,gA,gB,gC,lfoA,lfoB,filt,ap1,ap2,shape,outG];
+    if(sh) patchNodes.push(sh);
+
+    updateFn=function(){
+      var t=actx.currentTime;
+      /* fréquence de base : grave, lente à réagir — comme un souvenir */
+      var fc = 55*Math.pow(2,gRep/20);
+      oA.frequency.setTargetAtTime(fc,t,.60);
+      /* oB en quinte juste, micro-désaccordé selon vitesse */
+      var detune = 0.8+gSpd*0.35;
+      oB.frequency.setTargetAtTime(fc*1.5+detune,t,.55);
+      /* harmonique haute : octave +1 tierce */
+      oC.frequency.setTargetAtTime(fc*5,t,.50);
+
+      /* filtre : bouge très lentement, suit l'amplitude */
+      filt.frequency.setTargetAtTime(
+        inv?(180+gScaleY*800+gAmp*600):(400+gScaleY*1200+gAmp*800),
+        t,.40);
+
+      /* LFO : houle, très lente */
+      lfo.frequency.setTargetAtTime(0.02+gSpd*0.015,t,.80);
+      lfoA.gain.setTargetAtTime(gAmp*320,t,.30);
+      lfoB.gain.setTargetAtTime(gAmp*0.12,t,.30);
+
+      /* S&H : dérive mélancolique */
+      if(sh) try{sh.node.gain.setTargetAtTime(gChaos*180,t,.20);}catch(e){}
+
+      /* allpass : réverb imaginaire */
+      ap1.frequency.setTargetAtTime(600+gScaleX*400,t,.35);
+      ap2.frequency.setTargetAtTime(1200+gScaleX*600,t,.35);
+    };
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : drone sawtooth · noyé · mélancolie dense':'patch : drone sine · flottant · mélancolie alcoolisée';
   }
 }
 
