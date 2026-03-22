@@ -98,7 +98,9 @@ var gRep=DEF.rep, gSpd=DEF.spd, gAmp=DEF.amp, gDir=DEF.dir, gChaos=DEF.chaos;
 var gScaleX=DEF.scaleX, gScaleY=DEF.scaleY;
 var actx=null, synthOn=false, masterGain=null, patchNodes=[], updateFn=null;
 
-/* ── WebGL ── */
+/* ══════════════════════════════════════════════
+   WebGL
+══════════════════════════════════════════════ */
 var canvas = document.getElementById('c');
 var gl = canvas.getContext('webgl');
 gl.viewport(0,0,720,480);
@@ -116,7 +118,6 @@ void main(){
   gl_Position = vec4(a_pos, 0.0, 1.0);
 }`;
 
-/* ── Fragment shader : chaos Perlin organique, zéro glitch/aberration ── */
 var FRAG = `
 precision mediump float;
 varying vec2 v_uv;
@@ -126,47 +127,48 @@ uniform sampler2D u_tex;
 float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float vnoise(vec2 p){
   vec2 i=floor(p), f=fract(p);
-  f = f*f*(3.0-2.0*f);
+  f=f*f*(3.0-2.0*f);
   float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
-  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
-}
-
-/* Déformation organique : 2 couches Perlin grandes mailles
-   couche 1 : grandes ondulations lentes (renflements)
-   couche 2 : frémissements plus rapides, amplitude moindre
-   Pas de glitch, pas d'aberration chromatique.
-   À mi-course le visage est déformé mais lisible.
-   À fond : sculpture abstraite mais structurée. */
-vec2 organicWarp(vec2 uv, float t, float amount){
-  float s1 = 1.8;
-  float nx1 = vnoise(uv * s1 + vec2(t * 0.10, 0.0)) - 0.5;
-  float ny1 = vnoise(uv * s1 + vec2(0.0, t * 0.12) + vec2(3.7, 8.2)) - 0.5;
-  float s2 = 5.0;
-  float nx2 = vnoise(uv * s2 + vec2(-t * 0.24, t * 0.17) + vec2(1.3, 4.1)) - 0.5;
-  float ny2 = vnoise(uv * s2 + vec2(t * 0.20, -t * 0.14) + vec2(6.6, 2.9)) - 0.5;
-  vec2 d = vec2(nx1, ny1) * 0.72 + vec2(nx2, ny2) * 0.32;
-  return uv + d * amount;
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
 }
 
 void main(){
   vec2 uv = v_uv;
 
-  /* onde principale */
+  /* ── onde principale ── */
   if(u_dir < 0.5){
     uv.y += sin(uv.x * u_rep + u_time * u_spd) * u_amp;
   } else {
     uv.x += sin(uv.y * u_rep + u_time * u_spd) * u_amp;
   }
 
-  /* chaos organique progressif — courbe quadratique pour douceur à mi-course */
+  /* ── chaos organique : warp nul aux bords, maximal au centre ──
+     Le masque de vignette empêche tout débordement sur le fond blanc.
+     Les pixels de contour restent ancrés ; seul l'intérieur « bout ». */
   if(u_chaos > 0.0){
-    float amount = u_chaos * u_chaos * 0.42;
-    uv = organicWarp(uv, u_time, amount);
+    /* vignette : 0 sur les bords, 1 au centre — marge de 12% */
+    float m = 0.12;
+    float vx = smoothstep(0.0, m, uv.x) * smoothstep(0.0, m, 1.0 - uv.x);
+    float vy = smoothstep(0.0, m, uv.y) * smoothstep(0.0, m, 1.0 - uv.y);
+    float vign = vx * vy;
+
+    float amount = u_chaos * u_chaos * 0.44 * vign;
+
+    /* couche 1 : grandes ondulations lentes */
+    float nx1 = vnoise(uv * 1.8 + vec2(u_time * 0.10, 0.0)) - 0.5;
+    float ny1 = vnoise(uv * 1.8 + vec2(0.0, u_time * 0.12) + vec2(3.7,8.2)) - 0.5;
+    /* couche 2 : frémissements plus rapides */
+    float nx2 = vnoise(uv * 5.0 + vec2(-u_time*0.24, u_time*0.17) + vec2(1.3,4.1)) - 0.5;
+    float ny2 = vnoise(uv * 5.0 + vec2(u_time*0.20,-u_time*0.14) + vec2(6.6,2.9)) - 0.5;
+
+    vec2 d = vec2(nx1,ny1)*0.72 + vec2(nx2,ny2)*0.32;
+    uv += d * amount;
   }
 
-  float mask = step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);
+  /* pas de masque de découpe : on clamp et on laisse les bords s'étirer
+     naturellement grâce à la vignette — pas de fond blanc visible */
   vec4 col = texture2D(u_tex, clamp(uv, 0.0, 1.0));
-  gl_FragColor = col * mask + vec4(1.0) * (1.0 - mask);
+  gl_FragColor = col;
 }`;
 
 function mkSh(t,s){ var sh=gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); return sh; }
@@ -196,80 +198,93 @@ var U = {
 var tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([180,180,180,255]));
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 
-function loadImage(index, applyDef) {
+function loadImage(index, applyDef){
   var e = images[index];
   document.getElementById('imgLabel').textContent = e.name;
   if(applyDef){
-    var p = {};
-    for(var k in DEF) p[k] = DEF[k];
-    for(var k in e.defaults) p[k] = e.defaults[k];
+    var p={}; for(var k in DEF) p[k]=DEF[k]; for(var k in e.defaults) p[k]=e.defaults[k];
     applyParams(p);
   }
-  var img = new Image();
-  img.crossOrigin = 'anonymous';
+  var img = new Image(); img.crossOrigin='anonymous';
   img.onload = function(){
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
   };
   img.src = e.url;
-  if(synthOn && actx) rebuildPatch(e.synth || 'ravier');
+  if(synthOn && actx) rebuildPatch(e.synth||'ravier');
 }
 
-/* ── UI ── */
+/* ══════════════════════════════════════════════
+   UI
+══════════════════════════════════════════════ */
 function applyParams(p){
   gScaleY=p.scaleY; gScaleX=p.scaleX; gRep=p.rep; gSpd=p.spd; gAmp=p.amp; gDir=p.dir; gChaos=p.chaos;
-  document.getElementById('scaleY').value=gScaleY;        document.getElementById('scaleYVal').textContent=gScaleY.toFixed(2);
-  document.getElementById('scaleX').value=gScaleX;        document.getElementById('scaleXVal').textContent=gScaleX.toFixed(2);
-  document.getElementById('rep').value=gRep;              document.getElementById('repVal').textContent=(+gRep).toFixed(1);
-  document.getElementById('spd').value=gSpd;              document.getElementById('spdVal').textContent=(+gSpd).toFixed(1);
-  document.getElementById('amp').value=gAmp;              document.getElementById('ampVal').textContent=(+gAmp).toFixed(2);
+  document.getElementById('scaleY').value=gScaleY;       document.getElementById('scaleYVal').textContent=gScaleY.toFixed(2);
+  document.getElementById('scaleX').value=gScaleX;       document.getElementById('scaleXVal').textContent=gScaleX.toFixed(2);
+  document.getElementById('rep').value=gRep;             document.getElementById('repVal').textContent=(+gRep).toFixed(1);
+  document.getElementById('spd').value=gSpd;             document.getElementById('spdVal').textContent=(+gSpd).toFixed(1);
+  document.getElementById('amp').value=gAmp;             document.getElementById('ampVal').textContent=(+gAmp).toFixed(2);
   document.getElementById('dirBtn').textContent=gDir<0.5?'X':'Y';
-  document.getElementById('randomSlider').value=gChaos;   document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);
+  document.getElementById('randomSlider').value=gChaos;  document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);
 }
-
-document.getElementById('rep').oninput          = function(e){ gRep    =+e.target.value; document.getElementById('repVal').textContent   =(+gRep).toFixed(1);    };
-document.getElementById('spd').oninput          = function(e){ gSpd    =+e.target.value; document.getElementById('spdVal').textContent   =(+gSpd).toFixed(1);    };
-document.getElementById('amp').oninput          = function(e){ gAmp    =+e.target.value; document.getElementById('ampVal').textContent   =(+gAmp).toFixed(2);    };
-document.getElementById('scaleX').oninput       = function(e){ gScaleX =+e.target.value; document.getElementById('scaleXVal').textContent=(+gScaleX).toFixed(2); };
-document.getElementById('scaleY').oninput       = function(e){ gScaleY =+e.target.value; document.getElementById('scaleYVal').textContent=(+gScaleY).toFixed(2); };
-document.getElementById('randomSlider').oninput = function(e){ gChaos  =+e.target.value; document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);  };
-document.getElementById('dirBtn').onclick       = function(){
-  gDir = gDir < 0.5 ? 1 : 0;
-  document.getElementById('dirBtn').textContent = gDir < 0.5 ? 'X' : 'Y';
-  /* switch d'axe = rebuild du patch audio avec inversion modulateur/porteur */
-  if(synthOn && actx) rebuildPatch(images[imgIndex].synth || 'ravier');
+document.getElementById('rep').oninput          = function(e){ gRep   =+e.target.value; document.getElementById('repVal').textContent   =(+gRep).toFixed(1);    };
+document.getElementById('spd').oninput          = function(e){ gSpd   =+e.target.value; document.getElementById('spdVal').textContent   =(+gSpd).toFixed(1);    };
+document.getElementById('amp').oninput          = function(e){ gAmp   =+e.target.value; document.getElementById('ampVal').textContent   =(+gAmp).toFixed(2);    };
+document.getElementById('scaleX').oninput       = function(e){ gScaleX=+e.target.value; document.getElementById('scaleXVal').textContent=(+gScaleX).toFixed(2); };
+document.getElementById('scaleY').oninput       = function(e){ gScaleY=+e.target.value; document.getElementById('scaleYVal').textContent=(+gScaleY).toFixed(2); };
+document.getElementById('randomSlider').oninput = function(e){ gChaos =+e.target.value; document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);  };
+document.getElementById('dirBtn').onclick = function(){
+  gDir = gDir<0.5 ? 1 : 0;
+  document.getElementById('dirBtn').textContent = gDir<0.5?'X':'Y';
+  if(synthOn && actx) rebuildPatch(images[imgIndex].synth||'ravier');
 };
 document.getElementById('imgBtn').onclick = function(){ imgIndex=(imgIndex+1)%images.length; loadImage(imgIndex,false); };
 
-/* ── Audio ── */
+/* ══════════════════════════════════════════════
+   Audio — utilitaires
+══════════════════════════════════════════════ */
 
-/* S&H simulé : ConstantSourceNode mis à jour périodiquement avec lissage */
-function makeSH(rate, outputGain){
-  if(!actx || !actx.createConstantSource) return null;
-  var src  = actx.createConstantSource();
-  var gain = actx.createGain(); gain.gain.value = outputGain;
-  src.connect(gain); src.start();
-  var current = 0, target = 0;
-  var iv = setInterval(function(){
-    if(!actx) return;
-    target  = Math.random() * 2 - 1;
-    current += (target - current) * 0.4;
-    try { src.offset.setTargetAtTime(current, actx.currentTime, 0.07); } catch(e){}
-  }, Math.round(1000 / Math.max(0.1, rate)));
-  return {
-    node: gain, src: src,
-    setRate: function(r){ clearInterval(iv); /* simplifié : on ne redémarre pas l'interval ici */ },
-    stop: function(){ clearInterval(iv); try{ src.stop(); }catch(e){} }
-  };
+/* Crée une courbe de forme d'onde pour WaveShaper (tanh doux) */
+function tanhCurve(amount){
+  var c=new Float32Array(512);
+  for(var i=0;i<512;i++){ var x=i/256-1; c[i]=Math.tanh(x*amount)*0.88; }
+  return c;
 }
 
-function mkNoiseBuf(c){
-  var len=c.sampleRate*2, nb=c.createBuffer(1,len,c.sampleRate), d=nb.getChannelData(0);
+/* S&H : ConstantSourceNode mis à jour périodiquement, lissage exp */
+function makeSH(rate, outGain){
+  if(!actx||!actx.createConstantSource) return null;
+  var src=actx.createConstantSource();
+  var gain=actx.createGain(); gain.gain.value=outGain;
+  src.connect(gain); src.start();
+  var cur=0, tgt=0;
+  var iv=setInterval(function(){
+    if(!actx) return;
+    tgt=Math.random()*2-1; cur+=(tgt-cur)*0.42;
+    try{ src.offset.setTargetAtTime(cur,actx.currentTime,0.07); }catch(e){}
+  }, Math.round(1000/Math.max(0.05,rate)));
+  return { node:gain, src:src, stop:function(){ clearInterval(iv); try{src.stop();}catch(e){} } };
+}
+
+/* Ring mod : multiplie deux signaux audio via GainNode (WebAudio natif) */
+function makeRingMod(srcA, srcB, outNode){
+  /* WebAudio n'a pas de multiplieur natif explicite mais on peut :
+     créer un GainNode dont le gain est modulé par srcB,
+     et y injecter srcA — c'est la ring mod standard */
+  var g = actx.createGain(); g.gain.value = 0;
+  srcA.connect(g);
+  srcB.connect(g.gain);
+  g.connect(outNode);
+  return g;
+}
+
+function mkNoiseBuf(){
+  var len=actx.sampleRate*2, nb=actx.createBuffer(1,len,actx.sampleRate), d=nb.getChannelData(0);
   for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
   return nb;
 }
@@ -281,198 +296,230 @@ function disposeNodes(){
   patchNodes=[]; updateFn=null;
 }
 
+/* ══════════════════════════════════════════════
+   PATCHES
+══════════════════════════════════════════════ */
 function rebuildPatch(name){
-  if(!actx || !synthOn) return;
+  if(!actx||!synthOn) return;
   disposeNodes();
-  var dst = masterGain, now = actx.currentTime;
-  var inv = (gDir < 0.5); /* axe X = mode inversé pour tous les patches */
+  var dst=masterGain, now=actx.currentTime;
+  var inv=(gDir<0.5); /* Y=normal, X=forme d'onde alternative */
 
-  /* ── RAVIER : FM 2-op adouci ── */
-  if(name === 'ravier'){
-    var carrier = actx.createOscillator(); carrier.type = 'triangle';
-    var modOsc  = actx.createOscillator(); modOsc.type  = inv ? 'sine' : 'square';
+  /* ────────────────────────────────────────────
+     RAVIER — FM 2-op
+     Y : carrier triangle, mod square  → cuivré, harangue
+     X : carrier sine,     mod triangle → plus doux, spectral
+  ──────────────────────────────────────────── */
+  if(name==='ravier'){
+    var carrier = actx.createOscillator();
+    carrier.type = inv ? 'sine' : 'triangle';
+    var modOsc  = actx.createOscillator();
+    modOsc.type = inv ? 'triangle' : 'square';
     var modGain = actx.createGain();
-    var carGain = actx.createGain(); carGain.gain.value = 0.40;
-    var lfo  = actx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 3.2;
-    var lfoG = actx.createGain(); lfoG.gain.value = 0;
-    var filt = actx.createBiquadFilter(); filt.type = 'bandpass'; filt.Q.value = inv ? 1.5 : 2.8;
-    /* saturation douce tanh — uniquement mode normal */
-    var wave = actx.createWaveShaper();
-    var wc = new Float32Array(512);
-    for(var i=0;i<512;i++){ var x=i/256-1; wc[i]=Math.tanh(x*(inv?1.0:1.6))*0.80; }
-    wave.curve = wc;
-    /* S&H chaos sur fréquence carrier */
-    var sh = makeSH(2 + gChaos * 8, 0);
+    var carGain = actx.createGain(); carGain.gain.value=0.40;
+    var lfo     = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=3.2;
+    var lfoG    = actx.createGain(); lfoG.gain.value=0;
+    var filt    = actx.createBiquadFilter(); filt.type='bandpass'; filt.Q.value=inv?1.8:2.8;
+    var wave    = actx.createWaveShaper(); wave.curve=tanhCurve(inv?1.1:1.6);
+    var sh      = makeSH(2+gChaos*8, 0);
 
-    if(inv){
-      /* inversion : carrier module modOsc */
-      carrier.connect(modGain); modGain.connect(modOsc.frequency);
-      modOsc.connect(carGain);
-    } else {
-      modOsc.connect(modGain); modGain.connect(carrier.frequency);
-      carrier.connect(carGain);
-    }
-    if(sh) sh.node.connect(inv ? modOsc.frequency : carrier.frequency);
-    lfo.connect(lfoG); lfoG.connect(inv ? modOsc.frequency : carrier.frequency);
-    carGain.connect(filt); filt.connect(wave); wave.connect(dst);
+    modOsc.connect(modGain); modGain.connect(carrier.frequency);
+    if(sh) sh.node.connect(carrier.frequency);
+    lfo.connect(lfoG); lfoG.connect(carrier.frequency);
+    carrier.connect(carGain); carGain.connect(filt); filt.connect(wave); wave.connect(dst);
     carrier.start(now); modOsc.start(now); lfo.start(now);
-    patchNodes = [carrier, modOsc, lfo, modGain, carGain, lfoG, filt, wave];
+    patchNodes=[carrier,modOsc,lfo,modGain,carGain,lfoG,filt,wave];
     if(sh) patchNodes.push(sh);
 
-    updateFn = function(){
-      var t = actx.currentTime;
-      /* diviseur 18 = tessiture moins criarde */
-      var fc = 55 * Math.pow(2, gRep / 18);
-      (inv ? modOsc : carrier).frequency.setTargetAtTime(fc, t, .10);
-      (inv ? carrier : modOsc).frequency.setTargetAtTime(fc * (0.5 + gSpd * 0.22), t, .10);
-      modGain.gain.setTargetAtTime(fc * Math.min(0.35 + gSpd * 0.13, 2.8), t, .08);
-      lfo.frequency.setTargetAtTime(0.3 + gSpd * 0.22, t, .10);
-      lfoG.gain.setTargetAtTime(gAmp * 160, t, .06);
-      filt.frequency.setTargetAtTime(180 + gScaleY * 1700, t, .10);
-      filt.Q.setTargetAtTime(inv ? 1.2 : (1.4 + gChaos * 7), t, .08);
-      if(sh) try{ sh.node.gain.setTargetAtTime(fc * gChaos * 0.85, t, .05); }catch(e){}
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/18);
+      carrier.frequency.setTargetAtTime(fc,t,.10);
+      modOsc.frequency.setTargetAtTime(fc*(0.5+gSpd*0.22),t,.10);
+      modGain.gain.setTargetAtTime(fc*Math.min(0.35+gSpd*0.13,2.8),t,.08);
+      lfo.frequency.setTargetAtTime(0.3+gSpd*0.22,t,.10);
+      lfoG.gain.setTargetAtTime(gAmp*160,t,.06);
+      filt.frequency.setTargetAtTime(180+gScaleY*1700,t,.10);
+      filt.Q.setTargetAtTime(inv?1.6:(1.4+gChaos*7),t,.08);
+      if(sh) try{sh.node.gain.setTargetAtTime(fc*gChaos*0.85,t,.05);}catch(e){}
     };
-    document.getElementById('synthInfo').textContent =
-      inv ? 'patch : fm inversé · creux · spectral' : 'patch : fm 2-op · cuivré · harangue';
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : fm · sine/triangle · spectral':'patch : fm 2-op · cuivré · harangue';
 
-  /* ── STEINIGER : soustractif ── */
-  } else if(name === 'steiniger'){
-    var o1 = actx.createOscillator(); o1.type = inv ? 'triangle' : 'square';
-    var o2 = actx.createOscillator(); o2.type = inv ? 'sawtooth' : 'square';
-    var g1 = actx.createGain(); g1.gain.value = 0.25;
-    var g2 = actx.createGain(); g2.gain.value = 0.25;
-    var filt = actx.createBiquadFilter();
-    filt.type = inv ? 'highpass' : 'lowpass'; filt.Q.value = inv ? 0.5 : 0.7;
-    var lfo  = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.28;
-    var lfoG = actx.createGain(); lfoG.gain.value=0;
-    var sh = makeSH(1.5 + gChaos * 5, 0);
+  /* ────────────────────────────────────────────
+     STEINIGER — Ring mod
+     Deux oscillateurs légèrement désaccordés multipliés.
+     Produit des bandes latérales métalliques, rigides.
+     Y : square × square  → tranchant, parlementaire
+     X : triangle × sine  → plus rond, presque voix
+  ──────────────────────────────────────────── */
+  } else if(name==='steiniger'){
+    var oA = actx.createOscillator(); oA.type = inv?'triangle':'square';
+    var oB = actx.createOscillator(); oB.type = inv?'sine':'square';
+    /* ring mod : oA modulé en amplitude par oB */
+    var ringG = actx.createGain(); ringG.gain.value=0;
+    oA.connect(ringG); oB.connect(ringG.gain);
+    /* mix du carrier direct + ring */
+    var mix   = actx.createGain(); mix.gain.value=0.36;
+    var filt  = actx.createBiquadFilter(); filt.type='bandpass'; filt.Q.value=inv?1.5:2.2;
+    var lfo   = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.25;
+    var lfoG  = actx.createGain(); lfoG.gain.value=0;
+    var sh    = makeSH(1.5+gChaos*5, 0);
 
-    o1.connect(g1); o2.connect(g2); g1.connect(filt); g2.connect(filt);
+    ringG.connect(mix); mix.connect(filt);
     lfo.connect(lfoG); lfoG.connect(filt.frequency);
     if(sh) sh.node.connect(filt.frequency);
     filt.connect(dst);
-    o1.start(now); o2.start(now); lfo.start(now);
-    patchNodes = [o1, o2, lfo, g1, g2, lfoG, filt];
+    oA.start(now); oB.start(now); lfo.start(now);
+    patchNodes=[oA,oB,lfo,ringG,mix,lfoG,filt];
     if(sh) patchNodes.push(sh);
 
-    updateFn = function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12), dt=(gScaleX-1)*80;
-      o1.frequency.setTargetAtTime(fc, t, .10);
-      o2.frequency.setTargetAtTime(fc*(1+(0.5+gSpd*0.35)*0.033), t, .10);
-      o1.detune.setTargetAtTime(dt, t, .10); o2.detune.setTargetAtTime(-dt, t, .10);
-      filt.frequency.setTargetAtTime(inv?(800+gScaleY*3000):(200+gScaleY*1600), t, .10);
-      lfo.frequency.setTargetAtTime(0.05+gSpd*0.10, t, .10);
-      lfoG.gain.setTargetAtTime(gAmp*480, t, .07);
-      filt.Q.setTargetAtTime(inv?(0.3+gChaos*6):(0.4+gChaos*7), t, .10);
-      if(sh) try{ sh.node.gain.setTargetAtTime((inv?1100:750)*gChaos, t, .05); }catch(e){}
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12);
+      /* désaccord : oA à fc, oB légèrement au-dessus → battements */
+      var ratio = 1 + (0.5+gSpd*0.35)*0.04;
+      oA.frequency.setTargetAtTime(fc,t,.10);
+      oB.frequency.setTargetAtTime(fc*ratio,t,.10);
+      oA.detune.setTargetAtTime((gScaleX-1)*70,t,.10);
+      oB.detune.setTargetAtTime(-(gScaleX-1)*70,t,.10);
+      filt.frequency.setTargetAtTime(inv?(600+gScaleY*2800):(150+gScaleY*1500),t,.10);
+      lfo.frequency.setTargetAtTime(0.04+gSpd*0.09,t,.10);
+      lfoG.gain.setTargetAtTime(gAmp*420,t,.07);
+      filt.Q.setTargetAtTime(inv?(1.2+gChaos*5):(1.8+gChaos*8),t,.10);
+      if(sh) try{sh.node.gain.setTargetAtTime((inv?900:650)*gChaos,t,.05);}catch(e){}
     };
-    document.getElementById('synthInfo').textContent =
-      inv ? 'patch : soustractif · nasillard · contestataire' : 'patch : soustractif · rigide · parlementaire';
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : ring mod · rond · presque voix':'patch : ring mod · métallique · parlementaire';
 
-  /* ── VAL : additif ── */
-  } else if(name === 'val'){
-    var ratios = inv ? [1,3,5,7] : [1,2,4,8];
-    var oscs  = ratios.map(function(){ var o=actx.createOscillator(); o.type='sine'; return o; });
-    var gains = ratios.map(function(_,i){ var g=actx.createGain(); g.gain.value=0.19/(i+1); return g; });
-    var shelf = actx.createBiquadFilter();
-    shelf.type = inv ? 'lowshelf' : 'highshelf';
-    shelf.frequency.value = inv ? 800 : 2000; shelf.gain.value = inv ? 4 : 6;
+  /* ────────────────────────────────────────────
+     VAL — Cross mod (modulation croisée de fréquence)
+     oA module la fréquence de oB ET oB module celle de oA.
+     Instable, imprévisible, rhétorique qui se contredit.
+     Y : sawtooth × triangle  → dense, discursif
+     X : sine × sine          → plus pur, presque sinusoïdal au début
+                                 mais très instable dès que les gains montent
+  ──────────────────────────────────────────── */
+  } else if(name==='val'){
+    var oA  = actx.createOscillator(); oA.type = inv?'sine':'sawtooth';
+    var oB  = actx.createOscillator(); oB.type = inv?'sine':'triangle';
+    var gAB = actx.createGain(); gAB.gain.value=0; /* oA→freq(oB) */
+    var gBA = actx.createGain(); gBA.gain.value=0; /* oB→freq(oA) */
+    var outA = actx.createGain(); outA.gain.value=0.22;
+    var outB = actx.createGain(); outB.gain.value=0.22;
+    var filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=2.5;
     var lfo  = actx.createOscillator(); lfo.type='sine';
     var lfoG = actx.createGain(); lfoG.gain.value=0;
-    var sh = makeSH(1+gChaos*5, 0);
+    var sh   = makeSH(1+gChaos*5, 0);
 
-    oscs.forEach(function(o,i){ o.connect(gains[i]); gains[i].connect(shelf); });
-    lfo.connect(lfoG); lfoG.connect(shelf.frequency);
-    if(sh) sh.node.connect(shelf.frequency);
-    shelf.connect(dst);
-    oscs.forEach(function(o){ o.start(now); }); lfo.start(now);
-    patchNodes = oscs.concat(gains,[lfo,lfoG,shelf]);
+    /* cross mod : A module B, B module A */
+    oA.connect(gAB); gAB.connect(oB.frequency);
+    oB.connect(gBA); gBA.connect(oA.frequency);
+    oA.connect(outA); oB.connect(outB);
+    outA.connect(filt); outB.connect(filt);
+    lfo.connect(lfoG); lfoG.connect(filt.frequency);
+    if(sh) sh.node.connect(oA.frequency);
+    filt.connect(dst);
+    oA.start(now); oB.start(now); lfo.start(now);
+    patchNodes=[oA,oB,lfo,gAB,gBA,outA,outB,lfoG,filt];
     if(sh) patchNodes.push(sh);
 
-    updateFn = function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12), fmR=0.5+gSpd*0.32;
-      oscs.forEach(function(o,i){ o.frequency.setTargetAtTime(fc*ratios[i]*(1+(i>0?fmR*.07*i:0)),t,.10); });
-      lfo.frequency.setTargetAtTime(0.2+gSpd*0.28, t, .10);
-      lfoG.gain.setTargetAtTime(gAmp*850, t, .06);
-      shelf.gain.setTargetAtTime((inv?2:3)+gChaos*18, t, .08);
-      if(sh) try{ sh.node.gain.setTargetAtTime(fc*gChaos*1.4, t, .05); }catch(e){}
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12);
+      /* ratio légèrement non-entier pour l'inharmonicité */
+      oA.frequency.setTargetAtTime(fc,t,.10);
+      oB.frequency.setTargetAtTime(fc*1.618,t,.10); /* nombre d'or → jamais vraiment harmonique */
+      /* index de cross mod : monte vite, source d'instabilité contrôlée */
+      var idx=fc*(0.15+gSpd*0.18+gChaos*1.8);
+      gAB.gain.setTargetAtTime(idx,t,.08);
+      gBA.gain.setTargetAtTime(idx*0.7,t,.08);
+      lfo.frequency.setTargetAtTime(0.15+gSpd*0.25,t,.10);
+      lfoG.gain.setTargetAtTime(gAmp*750,t,.06);
+      filt.frequency.setTargetAtTime(300+gScaleY*3200,t,.10);
+      filt.Q.setTargetAtTime(1.5+gChaos*9,t,.10);
+      if(sh) try{sh.node.gain.setTargetAtTime(fc*gChaos*1.2,t,.05);}catch(e){}
     };
-    document.getElementById('synthInfo').textContent =
-      inv ? 'patch : additif · harmoniques impaires · organique' : 'patch : additif · harmoniques paires · rhétorique';
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : cross mod · sinusoïdal · instable':'patch : cross mod · inharmonique · rhétorique';
 
-  /* ── BLOCHER : sub pure, bruit atmosphérique minimal ── */
-  } else if(name === 'blocher'){
-    var sub  = actx.createOscillator(); sub.type  = 'sine';
-    var sub2 = actx.createOscillator(); sub2.type = inv ? 'triangle' : 'sine';
-    var subG  = actx.createGain(); subG.gain.value  = 0.50;
-    var sub2G = actx.createGain(); sub2G.gain.value = 0.10;
-    /* bruit très atténué — présence atmosphérique uniquement */
-    var nSrc  = actx.createBufferSource(); nSrc.buffer=mkNoiseBuf(actx); nSrc.loop=true;
-    var nFilt = actx.createBiquadFilter(); nFilt.type='bandpass'; nFilt.frequency.value=70; nFilt.Q.value=0.25;
-    var nGain = actx.createGain(); nGain.gain.value = 0.018;
-    var comb  = actx.createBiquadFilter();
-    comb.type = inv ? 'highpass' : 'lowpass';
-    comb.frequency.value = inv ? 110 : 270; comb.Q.value = inv ? 0.55 : 2.2;
+  /* ────────────────────────────────────────────
+     BLOCHER — Sub pure + ring mod très basse fréquence
+     Sub grave + ring mod lente qui crée des battements telluriques.
+     Y : sine sub + ring mod lente (battements lents, massif)
+     X : triangle sub + ring mod plus rapide (grondement actif)
+  ──────────────────────────────────────────── */
+  } else if(name==='blocher'){
+    var sub  = actx.createOscillator(); sub.type = inv?'triangle':'sine';
+    var subG = actx.createGain(); subG.gain.value=0.48;
+
+    /* ring mod très basse fréquence : osc à fc+quelques Hz → battements */
+    var ringOsc = actx.createOscillator(); ringOsc.type='sine';
+    var ringG   = actx.createGain(); ringG.gain.value=0;
+    sub.connect(ringG); ringOsc.connect(ringG.gain);
+    var ringOut = actx.createGain(); ringOut.gain.value=0.28;
+    ringG.connect(ringOut);
+
+    /* sub direct + ring mix → filtre passe-bas très grave */
+    var comb = actx.createBiquadFilter();
+    comb.type = inv?'bandpass':'lowpass';
+    comb.frequency.value=inv?180:260; comb.Q.value=inv?1.2:2.0;
+
     var lfo  = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.04;
     var lfoG = actx.createGain(); lfoG.gain.value=0;
-    var sh = makeSH(0.4+gChaos*2.5, 0);
+    var sh   = makeSH(0.4+gChaos*2.5, 0);
 
     sub.connect(subG); subG.connect(comb);
-    sub2.connect(sub2G); sub2G.connect(comb);
-    nSrc.connect(nFilt); nFilt.connect(nGain); nGain.connect(comb);
+    ringOut.connect(comb);
     lfo.connect(lfoG); lfoG.connect(comb.frequency);
     if(sh) sh.node.connect(sub.frequency);
     comb.connect(dst);
-    sub.start(now); sub2.start(now); nSrc.start(now); lfo.start(now);
-    patchNodes = [sub,sub2,nSrc,lfo,subG,sub2G,nFilt,nGain,comb,lfoG];
+    sub.start(now); ringOsc.start(now); lfo.start(now);
+    patchNodes=[sub,ringOsc,lfo,subG,ringG,ringOut,comb,lfoG];
     if(sh) patchNodes.push(sh);
 
-    updateFn = function(){
+    updateFn=function(){
       var t=actx.currentTime, fc=28*Math.pow(2,gRep/18);
-      sub.frequency.setTargetAtTime(fc, t, .35);
-      sub2.frequency.setTargetAtTime(fc*(inv?2.4:1.5), t, .30);
-      nFilt.frequency.setTargetAtTime(fc*1.7, t, .30);
-      comb.frequency.setTargetAtTime(inv?(180+gScaleY*550):(50+gScaleY*360), t, .25);
-      comb.Q.setTargetAtTime(inv?(0.45+gChaos*4.5):(1.1+gChaos*9), t, .12);
-      lfo.frequency.setTargetAtTime(0.01+gSpd*0.033, t, .25);
-      lfoG.gain.setTargetAtTime(gAmp*260, t, .10);
-      if(sh) try{ sh.node.gain.setTargetAtTime(fc*gChaos*0.65, t, .05); }catch(e){}
+      sub.frequency.setTargetAtTime(fc,t,.35);
+      /* ring osc très proche de fc → battements lents */
+      var beatFreq = inv ? (2.5+gSpd*1.2) : (0.8+gSpd*0.5);
+      ringOsc.frequency.setTargetAtTime(fc+beatFreq,t,.30);
+      ringOut.gain.setTargetAtTime(0.15+gAmp*0.6,t,.15);
+      comb.frequency.setTargetAtTime(inv?(120+gScaleY*480):(45+gScaleY*340),t,.25);
+      comb.Q.setTargetAtTime(inv?(1.0+gChaos*5):(1.2+gChaos*9),t,.12);
+      lfo.frequency.setTargetAtTime(0.01+gSpd*0.03,t,.25);
+      lfoG.gain.setTargetAtTime(gAmp*240,t,.10);
+      if(sh) try{sh.node.gain.setTargetAtTime(fc*gChaos*0.65,t,.05);}catch(e){}
     };
-    document.getElementById('synthInfo').textContent =
-      inv ? 'patch : sub · grondement · montagnard' : 'patch : sub pure · tellurique · massif';
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : sub triangle · battements · montagnard':'patch : sub sine · tellurique · massif';
 
-  /* ── LELLOUCHE : FM 3-op feedback ── */
-  } else if(name === 'lellouche'){
-    var op1 = actx.createOscillator(); op1.type='sawtooth';
-    var op2 = actx.createOscillator(); op2.type='triangle';
-    var op3 = actx.createOscillator(); op3.type='sine';
+  /* ────────────────────────────────────────────
+     LELLOUCHE — FM 3-op feedback
+     Y : sawtooth→triangle→sine→carrier (chaîne ascendante, cinématique)
+     X : sine→sine→sine→carrier (plus pur au départ, bascule vite en chaos)
+  ──────────────────────────────────────────── */
+  } else if(name==='lellouche'){
+    var op1 = actx.createOscillator(); op1.type = inv?'sine':'sawtooth';
+    var op2 = actx.createOscillator(); op2.type = inv?'sine':'triangle';
+    var op3 = actx.createOscillator(); op3.type = inv?'sine':'sine';
     var car = actx.createOscillator(); car.type='sine';
-    var g1=actx.createGain(); g1.gain.value=0;
-    var g2=actx.createGain(); g2.gain.value=0;
-    var g3=actx.createGain(); g3.gain.value=0;
-    var gCar=actx.createGain(); gCar.gain.value=0.44;
-    var fbG=actx.createGain(); fbG.gain.value=0;
-    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.6;
-    var lfoM=actx.createGain(); lfoM.gain.value=0;
-    var filt=actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=3.5;
-    var sh=makeSH(1.5+gChaos*6, 0);
+    var g1  = actx.createGain(); g1.gain.value=0;
+    var g2  = actx.createGain(); g2.gain.value=0;
+    var g3  = actx.createGain(); g3.gain.value=0;
+    var gCar= actx.createGain(); gCar.gain.value=0.44;
+    var fbG = actx.createGain(); fbG.gain.value=0;
+    var lfo = actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.6;
+    var lfoM= actx.createGain(); lfoM.gain.value=0;
+    var filt= actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=3.5;
+    var sh  = makeSH(1.5+gChaos*6, 0);
 
     op1.connect(g1); g1.connect(op2.frequency);
     op2.connect(g2); g2.connect(op3.frequency);
     op3.connect(g3); g3.connect(car.frequency);
     car.connect(gCar);
-
-    if(inv){
-      /* inversion : car boucle sur op1 (feedback externe plus instable) */
-      car.connect(fbG); fbG.connect(op1.frequency);
-    } else {
-      op1.connect(fbG); fbG.connect(op1.frequency);
-    }
-
+    op1.connect(fbG); fbG.connect(op1.frequency); /* feedback op1 sur lui-même */
     lfo.connect(lfoM); lfoM.connect(g1.gain); lfoM.connect(g2.gain); lfoM.connect(g3.gain);
     if(sh){ sh.node.connect(g1.gain); sh.node.connect(g2.gain); }
     gCar.connect(filt); filt.connect(dst);
-    [op1,op2,op3,car,lfo].forEach(function(o){ o.start(now); });
+    [op1,op2,op3,car,lfo].forEach(function(o){o.start(now);});
     patchNodes=[op1,op2,op3,car,lfo,g1,g2,g3,gCar,fbG,lfoM,filt];
     if(sh) patchNodes.push(sh);
 
@@ -486,23 +533,26 @@ function rebuildPatch(name){
       g1.gain.setTargetAtTime(idx,t,.08); g2.gain.setTargetAtTime(idx*.58,t,.08); g3.gain.setTargetAtTime(idx*.28,t,.08);
       lfo.frequency.setTargetAtTime(0.2+gSpd*0.17,t,.10);
       lfoM.gain.setTargetAtTime(gAmp*idx*1.4,t,.05);
-      fbG.gain.setTargetAtTime(inv?(0.04+gChaos*0.55):(gChaos*0.38),t,.10);
+      /* feedback : plus fort en mode X (sine) car le sin pur s'emballe plus vite */
+      fbG.gain.setTargetAtTime(inv?(gChaos*0.55):(gChaos*0.38),t,.10);
       filt.frequency.setTargetAtTime(280+gScaleY*2700,t,.10);
       filt.Q.setTargetAtTime(1.4+gChaos*8,t,.10);
-      if(sh) try{ sh.node.gain.setTargetAtTime(fc*gChaos*0.75,t,.05); }catch(e){}
+      if(sh) try{sh.node.gain.setTargetAtTime(fc*gChaos*0.75,t,.05);}catch(e){}
     };
-    document.getElementById('synthInfo').textContent =
-      inv ? 'patch : fm boucle · instable · charnel' : 'patch : fm 3-op feedback · cinématique · ascendant';
+    document.getElementById('synthInfo').textContent=
+      inv?'patch : fm 3-op sine · pur→chaos · charnel':'patch : fm 3-op · cinématique · ascendant';
   }
 }
 
+/* ══════════════════════════════════════════════
+   Init audio + bouton son
+══════════════════════════════════════════════ */
 function initAudio(){
   if(actx) return;
-  actx = new(window.AudioContext||window.webkitAudioContext)();
-  masterGain = actx.createGain(); masterGain.gain.value=0.48;
+  actx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=actx.createGain(); masterGain.gain.value=0.48;
   masterGain.connect(actx.destination);
 }
-
 document.getElementById('soundBtn').onclick=function(){
   initAudio();
   if(actx.state==='suspended') actx.resume();
@@ -512,7 +562,9 @@ document.getElementById('soundBtn').onclick=function(){
   else{ disposeNodes(); document.getElementById('synthInfo').textContent=''; }
 };
 
-/* ── Boucle principale ── */
+/* ══════════════════════════════════════════════
+   Boucle principale
+══════════════════════════════════════════════ */
 var startT=performance.now();
 function loop(){
   var t=(performance.now()-startT)/1000;
