@@ -4,73 +4,68 @@
 <meta charset="utf-8">
 <title>MODULOVE</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
-  background: #fff;
-  font-family: 'Times New Roman', serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 20px;
-  gap: 20px;
+  background:#fff;
+  font-family:'Times New Roman',serif;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:100vh; padding:40px 20px; gap:20px;
 }
-.scene { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.scene { display:flex; align-items:center; justify-content:center; gap:20px; }
 #imgBtn {
-  width: 60px; height: 60px; flex-shrink: 0;
-  background: #cc0000;
-  border-top: 3px solid #ff6666; border-left: 3px solid #ff4444;
-  border-bottom: 3px solid #660000; border-right: 3px solid #880000;
-  cursor: pointer;
+  width:60px; height:60px; flex-shrink:0;
+  background:#cc0000;
+  border-top:3px solid #ff6666; border-left:3px solid #ff4444;
+  border-bottom:3px solid #660000; border-right:3px solid #880000;
+  cursor:pointer;
 }
 #imgBtn:active {
-  border-top: 3px solid #660000; border-left: 3px solid #880000;
-  border-bottom: 3px solid #ff6666; border-right: 3px solid #ff4444;
-  background: #aa0000;
+  border-top:3px solid #660000; border-left:3px solid #880000;
+  border-bottom:3px solid #ff6666; border-right:3px solid #ff4444;
+  background:#aa0000;
 }
 #soundBtn {
-  width: 60px; height: 60px; flex-shrink: 0;
-  background: #111;
-  border-top: 3px solid #444; border-left: 3px solid #333;
-  border-bottom: 3px solid #000; border-right: 3px solid #000;
-  cursor: pointer; font-size: 22px; color: #555;
-  display: flex; align-items: center; justify-content: center;
-  user-select: none; font-family: 'Times New Roman', serif;
+  width:60px; height:60px; flex-shrink:0; background:#111;
+  border-top:3px solid #444; border-left:3px solid #333;
+  border-bottom:3px solid #000; border-right:3px solid #000;
+  cursor:pointer; font-size:22px; color:#555;
+  display:flex; align-items:center; justify-content:center;
+  user-select:none; font-family:'Times New Roman',serif;
 }
-#soundBtn.on { color: #ddd; background: #1a1a2e; border-top-color: #5555bb; border-left-color: #4444aa; }
-canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
-.controls { width: 90vw; max-width: 800px; display: flex; flex-direction: column; gap: 14px; }
-.slider-row { display: flex; align-items: center; gap: 16px; }
-.slider-row label { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #555; width: 130px; flex-shrink: 0; }
-.slider-row input[type=range] { flex: 1; accent-color: #888; }
-.slider-row span { font-size: 13px; color: #333; width: 44px; text-align: right; }
-.btn-row { display: flex; align-items: center; gap: 16px; }
-.btn-row label { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #555; width: 130px; flex-shrink: 0; }
+#soundBtn.on { color:#ddd; background:#1a1a2e; border-top-color:#5555bb; border-left-color:#4444aa; }
+canvas { display:block; width:720px; height:480px; flex-shrink:0; }
+.controls { width:90vw; max-width:800px; display:flex; flex-direction:column; gap:14px; }
+.slider-row { display:flex; align-items:center; gap:16px; }
+.slider-row label { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#555; width:130px; flex-shrink:0; }
+.slider-row input[type=range] { flex:1; accent-color:#888; }
+.slider-row span { font-size:13px; color:#333; width:44px; text-align:right; }
+.btn-row { display:flex; align-items:center; gap:16px; }
+.btn-row label { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#555; width:130px; flex-shrink:0; }
 #dirBtn {
-  width: 48px; height: 48px; font-size: 13px;
-  font-family: 'Times New Roman', serif;
-  background: #f0f0f0; color: black;
-  border-top: 2px solid #fff; border-left: 2px solid #fff;
-  border-bottom: 2px solid #888; border-right: 2px solid #888;
-  cursor: pointer; font-weight: bold;
+  width:48px; height:48px; font-size:13px;
+  font-family:'Times New Roman',serif;
+  background:#f0f0f0; color:black;
+  border-top:2px solid #fff; border-left:2px solid #fff;
+  border-bottom:2px solid #888; border-right:2px solid #888;
+  cursor:pointer; font-weight:bold;
 }
 #dirBtn:active {
-  border-top: 2px solid #888; border-left: 2px solid #888;
-  border-bottom: 2px solid #fff; border-right: 2px solid #fff;
-  background: #ddd;
+  border-top:2px solid #888; border-left:2px solid #888;
+  border-bottom:2px solid #fff; border-right:2px solid #fff;
+  background:#ddd;
 }
-.separator { border: none; border-top: 1px solid #eee; margin: 6px 0; }
-.section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #aaa; }
+.separator { border:none; border-top:1px solid #eee; margin:6px 0; }
+.section-label { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#aaa; }
 #imgLabel {
-  font-size: 13px; color: #888; letter-spacing: .06em;
-  font-family: Arial, sans-serif;
-  width: 720px; max-width: 90vw; padding: 6px 0 0 260px;
+  font-size:13px; color:#888; letter-spacing:.06em;
+  font-family:Arial,sans-serif;
+  width:720px; max-width:90vw; padding:6px 0 0 260px;
 }
 #synthInfo {
-  font-size: 11px; color: #7777bb; letter-spacing: .08em;
-  font-family: Arial, sans-serif; text-transform: uppercase;
-  padding: 2px 0 0 260px; width: 720px; max-width: 90vw; min-height: 16px;
+  font-size:11px; color:#7777bb; letter-spacing:.08em;
+  font-family:Arial,sans-serif; text-transform:uppercase;
+  padding:2px 0 0 260px; width:720px; max-width:90vw; min-height:16px;
 }
 </style>
 </head>
@@ -125,192 +120,269 @@ canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
 </div>
 
 <script>
-/* ══ VARIABLES — déclarées AVANT tout appel de fonction ══ */
-var DEFAULT_PARAMS = { scaleY:1.00, scaleX:1.45, rep:7, spd:3, amp:0.04, dir:1, chaos:0 };
+/* ═══════════════════════════════════════════
+   VARIABLES GLOBALES
+═══════════════════════════════════════════ */
+var DEF = { scaleY:1.00, scaleX:1.45, rep:7, spd:3, amp:0.04, dir:1, chaos:0 };
 
-var PROXY = 'https://corsproxy.io/?';
-var BASE  = 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/';
+var BASE = 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/';
+var PROXY = 'https://corsproxy.io/?url=';
 
 var images = [
-  { url: BASE+'Stephane-Ravier.png',                    name:'Stéphane Ravier',    synth:'ravier',    defaults:{scaleY:0.99,scaleX:0.67,rep:9.5,spd:6.6,amp:0.07,dir:1,chaos:0} },
-  { url: BASE+'steiniger_johannes_gross.jpg',            name:'Johannes Steiniger', synth:'steiniger', defaults:{} },
-  { url: BASE+'phillipe%20val.jpg',                      name:'Phillipe Val',       synth:'val',       defaults:{} },
-  { url: BASE+'Christoph_Blocher_(Bundesrat,_2004).jpg', name:'Christoph Blocher',  synth:'blocher',   defaults:{scaleY:1.34,scaleX:1.11,rep:10,spd:0.6,amp:0.12,dir:0,chaos:0} },
-  { url: BASE+'Gilles-Lellouche.png',                    name:'Gilles Lellouche',   synth:'lellouche', defaults:{} },
+  { url:BASE+'Stephane-Ravier.png',                    name:'Stéphane Ravier',    synth:'ravier',    defaults:{scaleY:0.99,scaleX:0.67,rep:9.5,spd:6.6,amp:0.07,dir:1,chaos:0} },
+  { url:BASE+'steiniger_johannes_gross.jpg',            name:'Johannes Steiniger', synth:'steiniger', defaults:{} },
+  { url:BASE+'phillipe%20val.jpg',                      name:'Phillipe Val',       synth:'val',       defaults:{} },
+  { url:BASE+'Christoph_Blocher_(Bundesrat,_2004).jpg', name:'Christoph Blocher',  synth:'blocher',   defaults:{scaleY:1.34,scaleX:1.11,rep:10,spd:0.6,amp:0.12,dir:0,chaos:0} },
+  { url:BASE+'Gilles-Lellouche.png',                    name:'Gilles Lellouche',   synth:'lellouche', defaults:{} },
 ];
 
 var imgIndex = 0;
 do { imgIndex = Math.floor(Math.random() * images.length); } while (imgIndex === 4);
 
-var rep    = DEFAULT_PARAMS.rep;
-var spd    = DEFAULT_PARAMS.spd;
-var amp    = DEFAULT_PARAMS.amp;
-var dir    = DEFAULT_PARAMS.dir;
-var chaos  = DEFAULT_PARAMS.chaos;
-var scaleX = DEFAULT_PARAMS.scaleX;
-var scaleY = DEFAULT_PARAMS.scaleY;
-var currentScaleXOffset = 0;
+var gRep=DEF.rep, gSpd=DEF.spd, gAmp=DEF.amp, gDir=DEF.dir, gChaos=DEF.chaos;
+var gScaleX=DEF.scaleX, gScaleY=DEF.scaleY;
 
-var actx       = null;
-var synthOn    = false;
-var masterGain = null;
-var patchNodes = [];
-var updateFn   = null;
+var actx=null, synthOn=false, masterGain=null, patchNodes=[], updateFn=null;
 
-/* ══ WebGL ══ */
+/* ═══════════════════════════════════════════
+   WEBGL
+═══════════════════════════════════════════ */
 var canvas = document.getElementById('c');
 var gl = canvas.getContext('webgl');
-gl.viewport(0, 0, 720, 480);
+gl.viewport(0,0,720,480);
 
-var vsrc = [
-  'attribute vec2 a_pos;',
-  'varying vec2 v_uv;',
-  'uniform float u_scaleX, u_scaleY, u_scaleXOffset;',
-  'void main(){',
-  '  vec2 uv=(a_pos+1.0)/2.0;',
-  '  uv.y=1.0-uv.y;',
-  '  uv.x=(uv.x-0.5)/(u_scaleX+u_scaleXOffset)+0.5;',
-  '  uv.y=(uv.y-0.5)/u_scaleY+0.5;',
-  '  v_uv=uv;',
-  '  gl_Position=vec4(a_pos,0,1);',
-  '}'
-].join('\n');
+var VERT = `
+attribute vec2 a_pos;
+varying vec2 v_uv;
+uniform float u_scaleX, u_scaleY;
+void main(){
+  vec2 uv = (a_pos + 1.0) * 0.5;
+  uv.y = 1.0 - uv.y;
+  uv.x = (uv.x - 0.5) / u_scaleX + 0.5;
+  uv.y = (uv.y - 0.5) / u_scaleY + 0.5;
+  v_uv = uv;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
 
-var fsrc = [
-  'precision mediump float;',
-  'varying vec2 v_uv;',
-  'uniform float u_time,u_rep,u_spd,u_amp,u_dir,u_chaos,u_chaosPhase,u_chaosFreq;',
-  'uniform sampler2D u_tex;',
-  'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
-  'float noise(vec2 p){',
-  '  vec2 i=floor(p),f=fract(p);',
-  '  f=f*f*(3.0-2.0*f);',
-  '  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);',
-  '}',
-  'void main(){',
-  '  vec2 uv=v_uv;',
-  '  float fm=1.0+u_chaos*u_chaosFreq*2.0;',
-  '  float pm=u_chaos*u_chaosPhase;',
-  '  float n=noise(uv*4.0*fm+u_time*0.3);',
-  '  float n2=noise(uv*7.0*fm-u_time*0.2+vec2(3.7,1.1));',
-  '  float r=u_rep*fm;',
-  '  if(u_dir<0.5){',
-  '    uv.y+=sin(v_uv.x*r+u_time*u_spd+n*pm*6.28)*u_amp+u_chaos*sin(v_uv.x*r*2.3+u_time*u_spd*1.7+n2*pm*3.14)*u_amp*0.5;',
-  '    uv.x+=u_chaos*n*0.12;',
-  '  }else{',
-  '    uv.x+=sin(v_uv.y*r+u_time*u_spd+n*pm*6.28)*u_amp+u_chaos*sin(v_uv.y*r*2.3+u_time*u_spd*1.7+n2*pm*3.14)*u_amp*0.5;',
-  '    uv.y+=u_chaos*n*0.12;',
-  '  }',
-  '  float mask=step(0.,uv.x)*step(0.,uv.y)*step(uv.x,1.)*step(uv.y,1.);',
-  '  gl_FragColor=texture2D(u_tex,uv)*mask+vec4(1,1,1,1)*(1.-mask);',
-  '}'
-].join('\n');
+/* Chaos amplifié : displacement multi-octave + glitch de couleur + fold */
+var FRAG = `
+precision mediump float;
+varying vec2 v_uv;
+uniform float u_time, u_rep, u_spd, u_amp, u_dir, u_chaos;
+uniform sampler2D u_tex;
 
-function mkShader(t,s){var sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}
-var prog=gl.createProgram();
-gl.attachShader(prog,mkShader(gl.VERTEX_SHADER,vsrc));
-gl.attachShader(prog,mkShader(gl.FRAGMENT_SHADER,fsrc));
-gl.linkProgram(prog);gl.useProgram(prog);
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float hash1(float n){ return fract(sin(n)*43758.5453); }
 
-var vbuf=gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,vbuf);
-gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-var aloc=gl.getAttribLocation(prog,'a_pos');
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p);
+  f=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
+}
+
+float fbm(vec2 p){
+  float v=0.0, a=0.5;
+  for(int i=0;i<5;i++){v+=a*noise(p); p*=2.1; a*=0.5;}
+  return v;
+}
+
+void main(){
+  vec2 uv = v_uv;
+
+  /* onde de base */
+  float n0 = fbm(uv * 3.0 + u_time * 0.2);
+  float wave;
+  if(u_dir < 0.5){
+    wave = sin(uv.x * u_rep + u_time * u_spd) * u_amp;
+    uv.y += wave;
+  } else {
+    wave = sin(uv.y * u_rep + u_time * u_spd) * u_amp;
+    uv.x += wave;
+  }
+
+  /* CHAOS — displacement fractal violent */
+  if(u_chaos > 0.0){
+    float c = u_chaos;
+    float t = u_time;
+
+    /* couche 1 : displacement lent large */
+    float nx = fbm(uv * 2.0 + vec2(t * 0.3, 0.0));
+    float ny = fbm(uv * 2.0 + vec2(0.0, t * 0.3) + vec2(5.2, 1.3));
+    uv += (vec2(nx, ny) - 0.5) * c * 0.8;
+
+    /* couche 2 : displacement rapide fin */
+    float nx2 = fbm(uv * 8.0 + vec2(-t * 0.7, t * 0.4));
+    float ny2 = fbm(uv * 8.0 + vec2(t * 0.5, -t * 0.6) + vec2(3.1, 7.4));
+    uv += (vec2(nx2, ny2) - 0.5) * c * 0.5;
+
+    /* couche 3 : glitch horizontal (lignes) */
+    float lineN = floor(uv.y * (10.0 + c * 40.0));
+    float glitchAmt = hash1(lineN + floor(t * (2.0 + c * 20.0))) * c;
+    if(glitchAmt > 0.5) uv.x += (glitchAmt - 0.5) * c * 1.5;
+
+    /* couche 4 : fold (repliement spatial) */
+    float foldStr = c * 0.4;
+    uv = uv + foldStr * vec2(sin(uv.y * 6.28 * 3.0 + t), cos(uv.x * 6.28 * 3.0 + t)) * 0.15;
+  }
+
+  float mask = step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);
+
+  /* glitch couleur : décalage RGB selon chaos */
+  vec4 col;
+  if(u_chaos > 0.05){
+    float cr = u_chaos * 0.03;
+    float r = texture2D(u_tex, clamp(uv + vec2(cr, 0.0),  0.0,1.0)).r;
+    float g = texture2D(u_tex, clamp(uv,                  0.0,1.0)).g;
+    float b = texture2D(u_tex, clamp(uv - vec2(cr, 0.0),  0.0,1.0)).b;
+    col = vec4(r,g,b,1.0);
+  } else {
+    col = texture2D(u_tex, uv);
+  }
+
+  gl_FragColor = col * mask + vec4(1.0) * (1.0 - mask);
+}`;
+
+function mkSh(t,s){ var sh=gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); return sh; }
+var prog = gl.createProgram();
+gl.attachShader(prog, mkSh(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, mkSh(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+var vbuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+var aloc = gl.getAttribLocation(prog,'a_pos');
 gl.enableVertexAttribArray(aloc);
 gl.vertexAttribPointer(aloc,2,gl.FLOAT,false,0,0);
 
-var uTime=gl.getUniformLocation(prog,'u_time');
-var uRep=gl.getUniformLocation(prog,'u_rep');
-var uSpd=gl.getUniformLocation(prog,'u_spd');
-var uAmp=gl.getUniformLocation(prog,'u_amp');
-var uDir=gl.getUniformLocation(prog,'u_dir');
-var uChaos=gl.getUniformLocation(prog,'u_chaos');
-var uChaosPhase=gl.getUniformLocation(prog,'u_chaosPhase');
-var uChaosFreq=gl.getUniformLocation(prog,'u_chaosFreq');
-var uScaleX=gl.getUniformLocation(prog,'u_scaleX');
-var uScaleY=gl.getUniformLocation(prog,'u_scaleY');
-var uScaleXOff=gl.getUniformLocation(prog,'u_scaleXOffset');
+var U = {
+  time:      gl.getUniformLocation(prog,'u_time'),
+  rep:       gl.getUniformLocation(prog,'u_rep'),
+  spd:       gl.getUniformLocation(prog,'u_spd'),
+  amp:       gl.getUniformLocation(prog,'u_amp'),
+  dir:       gl.getUniformLocation(prog,'u_dir'),
+  chaos:     gl.getUniformLocation(prog,'u_chaos'),
+  scaleX:    gl.getUniformLocation(prog,'u_scaleX'),
+  scaleY:    gl.getUniformLocation(prog,'u_scaleY'),
+};
 
-var tex=gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D,tex);
+/* ═══════════════════════════════════════════
+   TEXTURE — fetch → blob → createImageBitmap
+   (évite tainted canvas, pas besoin de CORS header)
+═══════════════════════════════════════════ */
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+/* placeholder 1×1 blanc pendant le chargement */
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([200,200,200,255]));
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 
-/* ══ CHARGEMENT IMAGE ══ */
-function loadImage(index, applyDef) {
-  var entry = images[index];
-  document.getElementById('imgLabel').textContent = entry.name;
-  currentScaleXOffset = entry.scaleXOffset || 0;
-  if (applyDef) {
-    var p = {};
-    for (var k in DEFAULT_PARAMS) p[k] = DEFAULT_PARAMS[k];
-    for (var k in entry.defaults)  p[k] = entry.defaults[k];
-    applyParams(p);
-  }
-  /* fetch via proxy CORS, fallback direct */
-  fetch(PROXY + encodeURIComponent(entry.url))
-    .then(function(r){ return r.blob(); })
-    .then(function(blob){
-      var burl = URL.createObjectURL(blob);
-      var img = new Image();
-      img.onload = function(){
-        gl.bindTexture(gl.TEXTURE_2D,tex);
-        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
-        URL.revokeObjectURL(burl);
-      };
-      img.src = burl;
+function loadTex(url, onDone) {
+  /* essai 1 : proxy corsproxy.io */
+  fetch(PROXY + encodeURIComponent(url))
+    .then(function(r){
+      if(!r.ok) throw new Error('proxy fail');
+      return r.blob();
+    })
+    .then(function(blob){ return createImageBitmap(blob); })
+    .then(function(bmp){
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bmp);
+      bmp.close && bmp.close();
+      if(onDone) onDone();
     })
     .catch(function(){
+      /* essai 2 : direct avec crossOrigin */
       var img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function(){
-        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+        if(onDone) onDone();
       };
-      img.src = entry.url;
+      img.onerror = function(){
+        /* essai 3 : allorigins */
+        fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url))
+          .then(function(r){ return r.blob(); })
+          .then(function(blob){ return createImageBitmap(blob); })
+          .then(function(bmp){
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bmp);
+            bmp.close && bmp.close();
+          });
+      };
+      img.src = url;
     });
-  if (synthOn && actx) rebuildPatch(entry.synth || 'ravier');
 }
 
-/* ══ PARAMÈTRES UI ══ */
-function applyParams(p) {
-  scaleY=p.scaleY; scaleX=p.scaleX; rep=p.rep; spd=p.spd; amp=p.amp; dir=p.dir; chaos=p.chaos;
-  document.getElementById('scaleY').value=scaleY;           document.getElementById('scaleYVal').textContent=scaleY.toFixed(2);
-  document.getElementById('scaleX').value=scaleX;           document.getElementById('scaleXVal').textContent=scaleX.toFixed(2);
-  document.getElementById('rep').value=rep;                 document.getElementById('repVal').textContent=(+rep).toFixed(1);
-  document.getElementById('spd').value=spd;                 document.getElementById('spdVal').textContent=(+spd).toFixed(1);
-  document.getElementById('amp').value=amp;                 document.getElementById('ampVal').textContent=(+amp).toFixed(2);
-  document.getElementById('dirBtn').textContent=dir<0.5?'X':'Y';
-  document.getElementById('randomSlider').value=chaos;      document.getElementById('randomVal').textContent=(+chaos).toFixed(2);
+function loadImage(index, applyDef) {
+  var e = images[index];
+  document.getElementById('imgLabel').textContent = e.name + ' — chargement…';
+  if(applyDef){
+    var p = {};
+    for(var k in DEF) p[k]=DEF[k];
+    for(var k in e.defaults) p[k]=e.defaults[k];
+    applyParams(p);
+  }
+  loadTex(e.url, function(){
+    document.getElementById('imgLabel').textContent = e.name;
+  });
+  if(synthOn && actx) rebuildPatch(e.synth||'ravier');
 }
 
-document.getElementById('rep').oninput          = function(e){rep=+e.target.value;   document.getElementById('repVal').textContent=(+rep).toFixed(1);};
-document.getElementById('spd').oninput          = function(e){spd=+e.target.value;   document.getElementById('spdVal').textContent=(+spd).toFixed(1);};
-document.getElementById('amp').oninput          = function(e){amp=+e.target.value;   document.getElementById('ampVal').textContent=(+amp).toFixed(2);};
-document.getElementById('scaleX').oninput       = function(e){scaleX=+e.target.value;document.getElementById('scaleXVal').textContent=(+scaleX).toFixed(2);};
-document.getElementById('scaleY').oninput       = function(e){scaleY=+e.target.value;document.getElementById('scaleYVal').textContent=(+scaleY).toFixed(2);};
-document.getElementById('randomSlider').oninput = function(e){chaos=+e.target.value; document.getElementById('randomVal').textContent=(+chaos).toFixed(2);};
-document.getElementById('dirBtn').onclick       = function(){dir=dir<0.5?1:0; document.getElementById('dirBtn').textContent=dir<0.5?'X':'Y';};
-document.getElementById('imgBtn').onclick       = function(){imgIndex=(imgIndex+1)%images.length; loadImage(imgIndex,false);};
+/* ═══════════════════════════════════════════
+   UI
+═══════════════════════════════════════════ */
+function applyParams(p){
+  gScaleY=p.scaleY; gScaleX=p.scaleX; gRep=p.rep; gSpd=p.spd;
+  gAmp=p.amp; gDir=p.dir; gChaos=p.chaos;
+  document.getElementById('scaleY').value=gScaleY;       document.getElementById('scaleYVal').textContent=gScaleY.toFixed(2);
+  document.getElementById('scaleX').value=gScaleX;       document.getElementById('scaleXVal').textContent=gScaleX.toFixed(2);
+  document.getElementById('rep').value=gRep;             document.getElementById('repVal').textContent=(+gRep).toFixed(1);
+  document.getElementById('spd').value=gSpd;             document.getElementById('spdVal').textContent=(+gSpd).toFixed(1);
+  document.getElementById('amp').value=gAmp;             document.getElementById('ampVal').textContent=(+gAmp).toFixed(2);
+  document.getElementById('dirBtn').textContent=gDir<0.5?'X':'Y';
+  document.getElementById('randomSlider').value=gChaos;  document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);
+}
 
-/* ══ AUDIO UTILS ══ */
+document.getElementById('rep').oninput          = function(e){gRep   =+e.target.value; document.getElementById('repVal').textContent   =(+gRep).toFixed(1);   };
+document.getElementById('spd').oninput          = function(e){gSpd   =+e.target.value; document.getElementById('spdVal').textContent   =(+gSpd).toFixed(1);   };
+document.getElementById('amp').oninput          = function(e){gAmp   =+e.target.value; document.getElementById('ampVal').textContent   =(+gAmp).toFixed(2);   };
+document.getElementById('scaleX').oninput       = function(e){gScaleX=+e.target.value; document.getElementById('scaleXVal').textContent=(+gScaleX).toFixed(2); };
+document.getElementById('scaleY').oninput       = function(e){gScaleY=+e.target.value; document.getElementById('scaleYVal').textContent=(+gScaleY).toFixed(2); };
+document.getElementById('randomSlider').oninput = function(e){gChaos =+e.target.value; document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);  };
+document.getElementById('dirBtn').onclick       = function(){ gDir=gDir<0.5?1:0; document.getElementById('dirBtn').textContent=gDir<0.5?'X':'Y'; };
+document.getElementById('imgBtn').onclick       = function(){ imgIndex=(imgIndex+1)%images.length; loadImage(imgIndex,false); };
+
+/* ═══════════════════════════════════════════
+   AUDIO UTILS
+═══════════════════════════════════════════ */
 function mkNoiseBuf(c){
   var len=c.sampleRate*2, nb=c.createBuffer(1,len,c.sampleRate), d=nb.getChannelData(0);
   for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
   return nb;
 }
 function disposeNodes(){
-  for(var i=0;i<patchNodes.length;i++){try{patchNodes[i].disconnect();if(patchNodes[i].stop)patchNodes[i].stop(0);}catch(e){}}
+  for(var i=0;i<patchNodes.length;i++){
+    try{ patchNodes[i].disconnect(); if(patchNodes[i].stop) patchNodes[i].stop(0); }catch(e){}
+  }
   patchNodes=[]; updateFn=null;
 }
 
-/* ══ PATCHES ══ */
+/* ═══════════════════════════════════════════
+   PATCHES PAR PERSONNAGE
+═══════════════════════════════════════════ */
 function rebuildPatch(name){
   if(!actx||!synthOn) return;
   disposeNodes();
-  var dest=masterGain, now=actx.currentTime;
+  var dst=masterGain, now=actx.currentTime;
 
+  /* ── RAVIER : FM 2-op, cuivré, harangue ── */
   if(name==='ravier'){
     var modOsc=actx.createOscillator(); modOsc.type='square';
     var modGain=actx.createGain();
@@ -320,26 +392,27 @@ function rebuildPatch(name){
     var lfoG=actx.createGain(); lfoG.gain.value=0;
     var filt=actx.createBiquadFilter(); filt.type='bandpass'; filt.Q.value=4;
     var dist=actx.createWaveShaper();
-    var dc=new Float32Array(256);
-    for(var i=0;i<256;i++){var x=i/128-1; dc[i]=x<0?-Math.pow(-x,.6):Math.pow(x,.6);}
+    var dc=new Float32Array(512);
+    for(var i=0;i<512;i++){var x=i/256-1; dc[i]=x<0?-Math.pow(-x,.55):Math.pow(x,.55);}
     dist.curve=dc;
     modOsc.connect(modGain); modGain.connect(carrier.frequency);
     carrier.connect(carGain); lfo.connect(lfoG); lfoG.connect(carGain.gain);
-    carGain.connect(filt); filt.connect(dist); dist.connect(dest);
+    carGain.connect(filt); filt.connect(dist); dist.connect(dst);
     modOsc.start(now); carrier.start(now); lfo.start(now);
     patchNodes=[modOsc,carrier,lfo,modGain,carGain,lfoG,filt,dist];
     updateFn=function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,rep/12);
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12);
       carrier.frequency.setTargetAtTime(fc,t,.08);
-      modOsc.frequency.setTargetAtTime(fc*(0.5+spd*0.4),t,.08);
-      modGain.gain.setTargetAtTime(fc*(0.5+chaos*8),t,.08);
-      lfo.frequency.setTargetAtTime(0.2+spd*0.3,t,.08);
-      lfoG.gain.setTargetAtTime(amp*200,t,.06);
-      filt.frequency.setTargetAtTime(200+scaleY*1800,t,.1);
-      filt.Q.setTargetAtTime(1+chaos*12,t,.1);
+      modOsc.frequency.setTargetAtTime(fc*(0.5+gSpd*0.4),t,.08);
+      modGain.gain.setTargetAtTime(fc*(0.5+gChaos*10),t,.07);
+      lfo.frequency.setTargetAtTime(0.2+gSpd*0.4,t,.08);
+      lfoG.gain.setTargetAtTime(gAmp*250,t,.05);
+      filt.frequency.setTargetAtTime(150+gScaleY*2200,t,.1);
+      filt.Q.setTargetAtTime(1+gChaos*16,t,.08);
     };
     document.getElementById('synthInfo').textContent='patch : fm 2-op · cuivré · harangue';
 
+  /* ── STEINIGER : Soustractif, rigide, parlementaire ── */
   } else if(name==='steiniger'){
     var o1=actx.createOscillator(); o1.type='square';
     var o2=actx.createOscillator(); o2.type='square';
@@ -348,22 +421,24 @@ function rebuildPatch(name){
     var filt=actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=0.7;
     var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.3;
     var lfoG=actx.createGain(); lfoG.gain.value=0;
-    o1.connect(g1); o2.connect(g2); g1.connect(filt); g2.connect(filt);
-    lfo.connect(lfoG); lfoG.connect(filt.frequency); filt.connect(dest);
+    o1.connect(g1); o2.connect(g2);
+    g1.connect(filt); g2.connect(filt);
+    lfo.connect(lfoG); lfoG.connect(filt.frequency); filt.connect(dst);
     o1.start(now); o2.start(now); lfo.start(now);
     patchNodes=[o1,o2,lfo,g1,g2,lfoG,filt];
     updateFn=function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), dt=(scaleX-1)*80;
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12), dt=(gScaleX-1)*100;
       o1.frequency.setTargetAtTime(fc,t,.1);
-      o2.frequency.setTargetAtTime(fc*(1+(0.5+spd*0.4)*0.03),t,.1);
+      o2.frequency.setTargetAtTime(fc*(1+(0.5+gSpd*0.4)*0.04),t,.1);
       o1.detune.setTargetAtTime(dt,t,.1); o2.detune.setTargetAtTime(-dt,t,.1);
-      filt.frequency.setTargetAtTime(300+scaleY*1400,t,.1);
-      lfo.frequency.setTargetAtTime(0.1+spd*0.15,t,.1);
-      lfoG.gain.setTargetAtTime(amp*500,t,.07);
-      filt.Q.setTargetAtTime(0.5+chaos*6,t,.1);
+      filt.frequency.setTargetAtTime(250+gScaleY*1600,t,.1);
+      lfo.frequency.setTargetAtTime(0.05+gSpd*0.12,t,.1);
+      lfoG.gain.setTargetAtTime(gAmp*600,t,.07);
+      filt.Q.setTargetAtTime(0.4+gChaos*8,t,.1);
     };
     document.getElementById('synthInfo').textContent='patch : soustractif · rigide · parlementaire';
 
+  /* ── VAL : Additif harmoniques paires, rhétorique ── */
   } else if(name==='val'){
     var ratios=[1,2,4,8];
     var oscs=ratios.map(function(){var o=actx.createOscillator();o.type='sine';return o;});
@@ -371,47 +446,49 @@ function rebuildPatch(name){
     var shelf=actx.createBiquadFilter(); shelf.type='highshelf'; shelf.frequency.value=2000; shelf.gain.value=6;
     var lfo=actx.createOscillator(); lfo.type='sine';
     var lfoG=actx.createGain(); lfoG.gain.value=0;
-    oscs.forEach(function(o,i){o.connect(gains[i]);gains[i].connect(shelf);});
-    lfo.connect(lfoG); lfoG.connect(shelf.frequency); shelf.connect(dest);
+    oscs.forEach(function(o,i){o.connect(gains[i]); gains[i].connect(shelf);});
+    lfo.connect(lfoG); lfoG.connect(shelf.frequency); shelf.connect(dst);
     oscs.forEach(function(o){o.start(now);}); lfo.start(now);
-    patchNodes=oscs.concat(gains).concat([lfo,lfoG,shelf]);
+    patchNodes=oscs.concat(gains,[lfo,lfoG,shelf]);
     updateFn=function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), fmR=0.5+spd*0.4;
-      oscs.forEach(function(o,i){o.frequency.setTargetAtTime(fc*ratios[i]*(1+(i>0?fmR*.08*i:0)),t,.1);});
-      lfo.frequency.setTargetAtTime(0.3+spd*0.3,t,.1);
-      lfoG.gain.setTargetAtTime(amp*900,t,.07);
-      shelf.frequency.setTargetAtTime(1200+scaleY*3000,t,.1);
-      shelf.gain.setTargetAtTime(4+chaos*20,t,.1);
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12), fmR=0.5+gSpd*0.4;
+      oscs.forEach(function(o,i){o.frequency.setTargetAtTime(fc*ratios[i]*(1+(i>0?fmR*.1*i:0)),t,.1);});
+      lfo.frequency.setTargetAtTime(0.2+gSpd*0.35,t,.1);
+      lfoG.gain.setTargetAtTime(gAmp*1100,t,.06);
+      shelf.frequency.setTargetAtTime(1000+gScaleY*3500,t,.1);
+      shelf.gain.setTargetAtTime(3+gChaos*24,t,.08);
     };
     document.getElementById('synthInfo').textContent='patch : additif · harmoniques paires · rhétorique';
 
+  /* ── BLOCHER : Granulaire simulé, tellurique, massif ── */
   } else if(name==='blocher'){
     var sub=actx.createOscillator(); sub.type='sine'; sub.frequency.value=40;
-    var subG=actx.createGain(); subG.gain.value=0.5;
+    var subG=actx.createGain(); subG.gain.value=0.55;
     var nSrc=actx.createBufferSource(); nSrc.buffer=mkNoiseBuf(actx); nSrc.loop=true;
-    var nFilt=actx.createBiquadFilter(); nFilt.type='bandpass'; nFilt.frequency.value=120; nFilt.Q.value=0.5;
-    var nGain=actx.createGain(); nGain.gain.value=0.2;
-    var comb=actx.createBiquadFilter(); comb.type='lowpass'; comb.frequency.value=250; comb.Q.value=3;
-    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.06;
+    var nFilt=actx.createBiquadFilter(); nFilt.type='bandpass'; nFilt.frequency.value=120; nFilt.Q.value=0.4;
+    var nGain=actx.createGain(); nGain.gain.value=0.18;
+    var comb=actx.createBiquadFilter(); comb.type='lowpass'; comb.frequency.value=280; comb.Q.value=3;
+    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.05;
     var lfoG=actx.createGain(); lfoG.gain.value=0;
     sub.connect(subG); subG.connect(comb);
     nSrc.connect(nFilt); nFilt.connect(nGain); nGain.connect(comb);
-    lfo.connect(lfoG); lfoG.connect(comb.frequency); comb.connect(dest);
+    lfo.connect(lfoG); lfoG.connect(comb.frequency); comb.connect(dst);
     sub.start(now); nSrc.start(now); lfo.start(now);
     patchNodes=[sub,nSrc,lfo,subG,nFilt,nGain,comb,lfoG];
     updateFn=function(){
-      var t=actx.currentTime, fc=30*Math.pow(2,rep/18), fmR=0.5+spd*0.4;
+      var t=actx.currentTime, fc=28*Math.pow(2,gRep/18), fmR=0.5+gSpd*0.4;
       sub.frequency.setTargetAtTime(fc,t,.3);
-      nFilt.frequency.setTargetAtTime(fc*2+chaos*400,t,.2);
-      nFilt.Q.setTargetAtTime(0.3+fmR*2,t,.15);
-      comb.frequency.setTargetAtTime(80+scaleY*380,t,.2);
-      comb.Q.setTargetAtTime(2+chaos*10,t,.1);
-      lfo.frequency.setTargetAtTime(0.02+spd*0.05,t,.2);
-      lfoG.gain.setTargetAtTime(amp*280,t,.1);
-      nGain.gain.setTargetAtTime(0.08+chaos*0.5,t,.1);
+      nFilt.frequency.setTargetAtTime(fc*2.2+gChaos*600,t,.2);
+      nFilt.Q.setTargetAtTime(0.2+fmR*2.5,t,.15);
+      comb.frequency.setTargetAtTime(60+gScaleY*450,t,.2);
+      comb.Q.setTargetAtTime(1.5+gChaos*14,t,.1);
+      lfo.frequency.setTargetAtTime(0.01+gSpd*0.04,t,.2);
+      lfoG.gain.setTargetAtTime(gAmp*350,t,.1);
+      nGain.gain.setTargetAtTime(0.06+gChaos*0.7,t,.1);
     };
     document.getElementById('synthInfo').textContent='patch : granulaire simulé · tellurique · massif';
 
+  /* ── LELLOUCHE : FM 3-op feedback, charnel, cinématique ── */
   } else if(name==='lellouche'){
     var op1=actx.createOscillator(); op1.type='sawtooth';
     var op2=actx.createOscillator(); op2.type='triangle';
@@ -432,22 +509,24 @@ function rebuildPatch(name){
     op1.connect(fbG); fbG.connect(op1.frequency);
     lfo.connect(lfoM);
     lfoM.connect(g1.gain); lfoM.connect(g2.gain); lfoM.connect(g3.gain);
-    gCar.connect(filt); filt.connect(dest);
+    gCar.connect(filt); filt.connect(dst);
     [op1,op2,op3,car,lfo].forEach(function(o){o.start(now);});
     patchNodes=[op1,op2,op3,car,lfo,g1,g2,g3,gCar,fbG,lfoM,filt];
     updateFn=function(){
-      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), fmR=0.5+spd*0.4;
+      var t=actx.currentTime, fc=55*Math.pow(2,gRep/12), fmR=0.5+gSpd*0.4;
       car.frequency.setTargetAtTime(fc,t,.08);
       op3.frequency.setTargetAtTime(fc*fmR,t,.08);
       op2.frequency.setTargetAtTime(fc*fmR*1.5,t,.08);
       op1.frequency.setTargetAtTime(fc*fmR*2.3,t,.08);
-      var idx=fc*(0.3+chaos*5);
-      g1.gain.setTargetAtTime(idx,t,.08); g2.gain.setTargetAtTime(idx*.6,t,.08); g3.gain.setTargetAtTime(idx*.3,t,.08);
-      lfo.frequency.setTargetAtTime(0.3+spd*0.2,t,.1);
-      lfoM.gain.setTargetAtTime(amp*idx*1.5,t,.06);
-      fbG.gain.setTargetAtTime(chaos*0.45,t,.1);
-      filt.frequency.setTargetAtTime(300+scaleY*2500,t,.1);
-      filt.Q.setTargetAtTime(2+chaos*8,t,.1);
+      var idx=fc*(0.4+gChaos*6);
+      g1.gain.setTargetAtTime(idx,t,.08);
+      g2.gain.setTargetAtTime(idx*.65,t,.08);
+      g3.gain.setTargetAtTime(idx*.35,t,.08);
+      lfo.frequency.setTargetAtTime(0.25+gSpd*0.22,t,.1);
+      lfoM.gain.setTargetAtTime(gAmp*idx*1.8,t,.05);
+      fbG.gain.setTargetAtTime(gChaos*0.5,t,.1);
+      filt.frequency.setTargetAtTime(250+gScaleY*3000,t,.1);
+      filt.Q.setTargetAtTime(1.5+gChaos*10,t,.1);
     };
     document.getElementById('synthInfo').textContent='patch : fm 3-op feedback · charnel · cinématique';
   }
@@ -456,7 +535,7 @@ function rebuildPatch(name){
 function initAudio(){
   if(actx) return;
   actx=new(window.AudioContext||window.webkitAudioContext)();
-  masterGain=actx.createGain(); masterGain.gain.value=0.5;
+  masterGain=actx.createGain(); masterGain.gain.value=0.48;
   masterGain.connect(actx.destination);
 }
 
@@ -466,30 +545,28 @@ document.getElementById('soundBtn').onclick=function(){
   synthOn=!synthOn;
   document.getElementById('soundBtn').classList.toggle('on',synthOn);
   if(synthOn){ rebuildPatch(images[imgIndex].synth||'ravier'); }
-  else { disposeNodes(); document.getElementById('synthInfo').textContent=''; }
+  else{ disposeNodes(); document.getElementById('synthInfo').textContent=''; }
 };
 
-/* ══ BOUCLE ══ */
-var noiseT=0;
+/* ═══════════════════════════════════════════
+   BOUCLE PRINCIPALE
+═══════════════════════════════════════════ */
+var startT = performance.now();
 function loop(){
-  noiseT+=0.015;
-  gl.uniform1f(uTime,      performance.now()/1000);
-  gl.uniform1f(uRep,       Math.max(0.1,rep));
-  gl.uniform1f(uSpd,       spd);
-  gl.uniform1f(uAmp,       Math.max(0,amp));
-  gl.uniform1f(uDir,       dir);
-  gl.uniform1f(uChaos,     chaos);
-  gl.uniform1f(uChaosPhase,Math.sin(noiseT*0.7)*0.5+0.5);
-  gl.uniform1f(uChaosFreq, Math.sin(noiseT*0.4+1.2)*0.5+0.5);
-  gl.uniform1f(uScaleX,    scaleX);
-  gl.uniform1f(uScaleY,    scaleY);
-  gl.uniform1f(uScaleXOff, currentScaleXOffset);
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-  if(synthOn&&actx&&updateFn) updateFn();
+  var t = (performance.now() - startT) / 1000;
+  gl.uniform1f(U.time,   t);
+  gl.uniform1f(U.rep,    Math.max(0.1, gRep));
+  gl.uniform1f(U.spd,    gSpd);
+  gl.uniform1f(U.amp,    Math.max(0, gAmp));
+  gl.uniform1f(U.dir,    gDir);
+  gl.uniform1f(U.chaos,  gChaos);
+  gl.uniform1f(U.scaleX, Math.max(0.01, gScaleX));
+  gl.uniform1f(U.scaleY, Math.max(0.01, gScaleY));
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  if(synthOn && actx && updateFn) updateFn();
   requestAnimationFrame(loop);
 }
 
-/* ══ INIT ══ */
 loadImage(imgIndex, true);
 loop();
 </script>
