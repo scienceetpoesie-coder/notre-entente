@@ -16,12 +16,7 @@ body {
   padding: 40px 20px;
   gap: 20px;
 }
-.scene {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-}
+.scene { display: flex; align-items: center; justify-content: center; gap: 20px; }
 #imgBtn {
   width: 60px; height: 60px; flex-shrink: 0;
   background: #cc0000;
@@ -42,7 +37,6 @@ body {
   cursor: pointer; font-size: 22px; color: #555;
   display: flex; align-items: center; justify-content: center;
   user-select: none; font-family: 'Times New Roman', serif;
-  transition: color 0.2s;
 }
 #soundBtn.on { color: #ddd; background: #1a1a2e; border-top-color: #5555bb; border-left-color: #4444aa; }
 canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
@@ -70,7 +64,7 @@ canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
 .section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #aaa; }
 #imgLabel {
   font-size: 13px; color: #888; letter-spacing: .06em;
-  font-style: normal; font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif;
   width: 720px; max-width: 90vw; padding: 6px 0 0 260px;
 }
 #synthInfo {
@@ -87,7 +81,7 @@ canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
   <canvas id="c" width="720" height="480"></canvas>
   <button id="imgBtn"></button>
 </div>
-<div id="imgLabel">—</div>
+<div id="imgLabel">chargement…</div>
 <div id="synthInfo"></div>
 
 <div class="controls">
@@ -131,433 +125,372 @@ canvas { display: block; width: 720px; height: 480px; flex-shrink: 0; }
 </div>
 
 <script>
-const DEFAULT_PARAMS = { scaleY:1.00, scaleX:1.45, rep:7, spd:3, amp:0.04, dir:1, chaos:0 };
+/* ══ VARIABLES — déclarées AVANT tout appel de fonction ══ */
+var DEFAULT_PARAMS = { scaleY:1.00, scaleX:1.45, rep:7, spd:3, amp:0.04, dir:1, chaos:0 };
 
-const images = [
-  {
-    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Stephane-Ravier.png',
-    name: 'Stéphane Ravier',
-    defaults: { scaleY:0.99, scaleX:0.67, rep:9.5, spd:6.6, amp:0.07, dir:1, chaos:0 },
-    synth: 'ravier'
-  },
-  {
-    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/steiniger_johannes_gross.jpg',
-    name: 'Johannes Steiniger',
-    defaults: {},
-    synth: 'steiniger'
-  },
-  {
-    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/phillipe%20val.jpg',
-    name: 'Phillipe Val',
-    defaults: {},
-    synth: 'val'
-  },
-  {
-    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Christoph_Blocher_(Bundesrat,_2004).jpg',
-    name: 'Christoph Blocher',
-    defaults: { scaleY:1.34, scaleX:1.11, rep:10, spd:0.6, amp:0.12, dir:0, chaos:0 },
-    synth: 'blocher'
-  },
-  {
-    url: 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/Gilles-Lellouche.png',
-    name: 'Gilles Lellouche',
-    defaults: {},
-    synth: 'lellouche'
-  },
+var PROXY = 'https://corsproxy.io/?';
+var BASE  = 'https://raw.githubusercontent.com/scienceetpoesie-coder/notre-entente/main/assets/';
+
+var images = [
+  { url: BASE+'Stephane-Ravier.png',                    name:'Stéphane Ravier',    synth:'ravier',    defaults:{scaleY:0.99,scaleX:0.67,rep:9.5,spd:6.6,amp:0.07,dir:1,chaos:0} },
+  { url: BASE+'steiniger_johannes_gross.jpg',            name:'Johannes Steiniger', synth:'steiniger', defaults:{} },
+  { url: BASE+'phillipe%20val.jpg',                      name:'Phillipe Val',       synth:'val',       defaults:{} },
+  { url: BASE+'Christoph_Blocher_(Bundesrat,_2004).jpg', name:'Christoph Blocher',  synth:'blocher',   defaults:{scaleY:1.34,scaleX:1.11,rep:10,spd:0.6,amp:0.12,dir:0,chaos:0} },
+  { url: BASE+'Gilles-Lellouche.png',                    name:'Gilles Lellouche',   synth:'lellouche', defaults:{} },
 ];
 
-const LELLOUCHE = 4;
-let imgIndex;
-do { imgIndex = Math.floor(Math.random() * images.length); } while (imgIndex === LELLOUCHE);
+var imgIndex = 0;
+do { imgIndex = Math.floor(Math.random() * images.length); } while (imgIndex === 4);
 
-/* ── WebGL ─────────────────────────────────────────────────── */
-const canvas = document.getElementById('c');
-const gl = canvas.getContext('webgl');
+var rep    = DEFAULT_PARAMS.rep;
+var spd    = DEFAULT_PARAMS.spd;
+var amp    = DEFAULT_PARAMS.amp;
+var dir    = DEFAULT_PARAMS.dir;
+var chaos  = DEFAULT_PARAMS.chaos;
+var scaleX = DEFAULT_PARAMS.scaleX;
+var scaleY = DEFAULT_PARAMS.scaleY;
+var currentScaleXOffset = 0;
+
+var actx       = null;
+var synthOn    = false;
+var masterGain = null;
+var patchNodes = [];
+var updateFn   = null;
+
+/* ══ WebGL ══ */
+var canvas = document.getElementById('c');
+var gl = canvas.getContext('webgl');
 gl.viewport(0, 0, 720, 480);
 
-const vsrc = `
-  attribute vec2 a_pos;
-  varying vec2 v_uv;
-  uniform float u_scaleX;
-  uniform float u_scaleY;
-  uniform float u_scaleXOffset;
-  void main(){
-    vec2 uv = (a_pos + 1.0) / 2.0;
-    uv.y = 1.0 - uv.y;
-    uv.x = (uv.x - 0.5) / (u_scaleX + u_scaleXOffset) + 0.5;
-    uv.y = (uv.y - 0.5) / u_scaleY + 0.5;
-    v_uv = uv;
-    gl_Position = vec4(a_pos, 0, 1);
-  }
-`;
+var vsrc = [
+  'attribute vec2 a_pos;',
+  'varying vec2 v_uv;',
+  'uniform float u_scaleX, u_scaleY, u_scaleXOffset;',
+  'void main(){',
+  '  vec2 uv=(a_pos+1.0)/2.0;',
+  '  uv.y=1.0-uv.y;',
+  '  uv.x=(uv.x-0.5)/(u_scaleX+u_scaleXOffset)+0.5;',
+  '  uv.y=(uv.y-0.5)/u_scaleY+0.5;',
+  '  v_uv=uv;',
+  '  gl_Position=vec4(a_pos,0,1);',
+  '}'
+].join('\n');
 
-const fsrc = `
-  precision mediump float;
-  varying vec2 v_uv;
-  uniform float u_time;
-  uniform float u_rep;
-  uniform float u_spd;
-  uniform float u_amp;
-  uniform float u_dir;
-  uniform float u_chaos;
-  uniform float u_chaosPhase;
-  uniform float u_chaosFreq;
-  uniform sampler2D u_tex;
+var fsrc = [
+  'precision mediump float;',
+  'varying vec2 v_uv;',
+  'uniform float u_time,u_rep,u_spd,u_amp,u_dir,u_chaos,u_chaosPhase,u_chaosFreq;',
+  'uniform sampler2D u_tex;',
+  'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+  'float noise(vec2 p){',
+  '  vec2 i=floor(p),f=fract(p);',
+  '  f=f*f*(3.0-2.0*f);',
+  '  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);',
+  '}',
+  'void main(){',
+  '  vec2 uv=v_uv;',
+  '  float fm=1.0+u_chaos*u_chaosFreq*2.0;',
+  '  float pm=u_chaos*u_chaosPhase;',
+  '  float n=noise(uv*4.0*fm+u_time*0.3);',
+  '  float n2=noise(uv*7.0*fm-u_time*0.2+vec2(3.7,1.1));',
+  '  float r=u_rep*fm;',
+  '  if(u_dir<0.5){',
+  '    uv.y+=sin(v_uv.x*r+u_time*u_spd+n*pm*6.28)*u_amp+u_chaos*sin(v_uv.x*r*2.3+u_time*u_spd*1.7+n2*pm*3.14)*u_amp*0.5;',
+  '    uv.x+=u_chaos*n*0.12;',
+  '  }else{',
+  '    uv.x+=sin(v_uv.y*r+u_time*u_spd+n*pm*6.28)*u_amp+u_chaos*sin(v_uv.y*r*2.3+u_time*u_spd*1.7+n2*pm*3.14)*u_amp*0.5;',
+  '    uv.y+=u_chaos*n*0.12;',
+  '  }',
+  '  float mask=step(0.,uv.x)*step(0.,uv.y)*step(uv.x,1.)*step(uv.y,1.);',
+  '  gl_FragColor=texture2D(u_tex,uv)*mask+vec4(1,1,1,1)*(1.-mask);',
+  '}'
+].join('\n');
 
-  float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
-  float noise(vec2 p){
-    vec2 i = floor(p); vec2 f = fract(p);
-    f = f*f*(3.0-2.0*f);
-    float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
-    return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
-  }
+function mkShader(t,s){var sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}
+var prog=gl.createProgram();
+gl.attachShader(prog,mkShader(gl.VERTEX_SHADER,vsrc));
+gl.attachShader(prog,mkShader(gl.FRAGMENT_SHADER,fsrc));
+gl.linkProgram(prog);gl.useProgram(prog);
 
-  void main(){
-    vec2 uv = v_uv;
-    float freqMod = 1.0 + u_chaos * u_chaosFreq * 2.0;
-    float phaseMod = u_chaos * u_chaosPhase;
-    float n  = noise(uv * 4.0 * freqMod + u_time * 0.3);
-    float n2 = noise(uv * 7.0 * freqMod - u_time * 0.2 + vec2(3.7, 1.1));
-    float rep = u_rep * freqMod;
-    if(u_dir < 0.5){
-      float wave = sin(v_uv.x * rep + u_time * u_spd + n * phaseMod * 6.28) * u_amp;
-      wave += u_chaos * sin(v_uv.x * rep * 2.3 + u_time * u_spd * 1.7 + n2 * phaseMod * 3.14) * u_amp * 0.5;
-      uv.y += wave; uv.x += u_chaos * n * 0.12;
-    } else {
-      float wave = sin(v_uv.y * rep + u_time * u_spd + n * phaseMod * 6.28) * u_amp;
-      wave += u_chaos * sin(v_uv.y * rep * 2.3 + u_time * u_spd * 1.7 + n2 * phaseMod * 3.14) * u_amp * 0.5;
-      uv.x += wave; uv.y += u_chaos * n * 0.12;
-    }
-    float mask = step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);
-    gl_FragColor = texture2D(u_tex, uv) * mask + vec4(1.,1.,1.,1.) * (1.0 - mask);
-  }
-`;
-
-function mkShader(type, src) {
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  return s;
-}
-const prog = gl.createProgram();
-gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, vsrc));
-gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, fsrc));
-gl.linkProgram(prog);
-gl.useProgram(prog);
-
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-const aloc = gl.getAttribLocation(prog, 'a_pos');
+var vbuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,vbuf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+var aloc=gl.getAttribLocation(prog,'a_pos');
 gl.enableVertexAttribArray(aloc);
-gl.vertexAttribPointer(aloc, 2, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(aloc,2,gl.FLOAT,false,0,0);
 
-const uTime        = gl.getUniformLocation(prog, 'u_time');
-const uRep         = gl.getUniformLocation(prog, 'u_rep');
-const uSpd         = gl.getUniformLocation(prog, 'u_spd');
-const uAmp         = gl.getUniformLocation(prog, 'u_amp');
-const uDir         = gl.getUniformLocation(prog, 'u_dir');
-const uChaos       = gl.getUniformLocation(prog, 'u_chaos');
-const uChaosPhase  = gl.getUniformLocation(prog, 'u_chaosPhase');
-const uChaosFreq   = gl.getUniformLocation(prog, 'u_chaosFreq');
-const uScaleX      = gl.getUniformLocation(prog, 'u_scaleX');
-const uScaleY      = gl.getUniformLocation(prog, 'u_scaleY');
-const uScaleXOff   = gl.getUniformLocation(prog, 'u_scaleXOffset');
+var uTime=gl.getUniformLocation(prog,'u_time');
+var uRep=gl.getUniformLocation(prog,'u_rep');
+var uSpd=gl.getUniformLocation(prog,'u_spd');
+var uAmp=gl.getUniformLocation(prog,'u_amp');
+var uDir=gl.getUniformLocation(prog,'u_dir');
+var uChaos=gl.getUniformLocation(prog,'u_chaos');
+var uChaosPhase=gl.getUniformLocation(prog,'u_chaosPhase');
+var uChaosFreq=gl.getUniformLocation(prog,'u_chaosFreq');
+var uScaleX=gl.getUniformLocation(prog,'u_scaleX');
+var uScaleY=gl.getUniformLocation(prog,'u_scaleY');
+var uScaleXOff=gl.getUniformLocation(prog,'u_scaleXOffset');
 
-let rep, spd, amp, dir, chaos, scaleX, scaleY, currentScaleXOffset = 0;
+var tex=gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,tex);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 
-function applyParams(p) {
-  scaleY = p.scaleY; scaleX = p.scaleX; rep = p.rep; spd = p.spd;
-  amp = p.amp; dir = p.dir; chaos = p.chaos;
-  document.getElementById('scaleY').value        = scaleY;
-  document.getElementById('scaleYVal').textContent = scaleY.toFixed(2);
-  document.getElementById('scaleX').value        = scaleX;
-  document.getElementById('scaleXVal').textContent = scaleX.toFixed(2);
-  document.getElementById('rep').value           = rep;
-  document.getElementById('repVal').textContent  = (+rep).toFixed(1);
-  document.getElementById('spd').value           = spd;
-  document.getElementById('spdVal').textContent  = (+spd).toFixed(1);
-  document.getElementById('amp').value           = amp;
-  document.getElementById('ampVal').textContent  = (+amp).toFixed(2);
-  document.getElementById('dirBtn').textContent  = dir < 0.5 ? 'X' : 'Y';
-  document.getElementById('randomSlider').value  = chaos;
-  document.getElementById('randomVal').textContent = (+chaos).toFixed(2);
-}
-
-document.getElementById('rep').oninput = e => { rep = +e.target.value; document.getElementById('repVal').textContent = (+rep).toFixed(1); };
-document.getElementById('spd').oninput = e => { spd = +e.target.value; document.getElementById('spdVal').textContent = (+spd).toFixed(1); };
-document.getElementById('amp').oninput = e => { amp = +e.target.value; document.getElementById('ampVal').textContent = (+amp).toFixed(2); };
-document.getElementById('dirBtn').onclick = () => { dir = dir < 0.5 ? 1 : 0; document.getElementById('dirBtn').textContent = dir < 0.5 ? 'X' : 'Y'; };
-document.getElementById('randomSlider').oninput = e => { chaos = +e.target.value; document.getElementById('randomVal').textContent = (+chaos).toFixed(2); };
-document.getElementById('scaleX').oninput = e => { scaleX = +e.target.value; document.getElementById('scaleXVal').textContent = (+scaleX).toFixed(2); };
-document.getElementById('scaleY').oninput = e => { scaleY = +e.target.value; document.getElementById('scaleYVal').textContent = (+scaleY).toFixed(2); };
-
-const tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
+/* ══ CHARGEMENT IMAGE ══ */
 function loadImage(index, applyDef) {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = images[index].url;
-  img.onload = () => {
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-  };
-  currentScaleXOffset = images[index].scaleXOffset || 0;
-  document.getElementById('imgLabel').textContent = images[index].name;
+  var entry = images[index];
+  document.getElementById('imgLabel').textContent = entry.name;
+  currentScaleXOffset = entry.scaleXOffset || 0;
   if (applyDef) {
-    const p = Object.assign({}, DEFAULT_PARAMS, images[index].defaults || {});
+    var p = {};
+    for (var k in DEFAULT_PARAMS) p[k] = DEFAULT_PARAMS[k];
+    for (var k in entry.defaults)  p[k] = entry.defaults[k];
     applyParams(p);
   }
-  if (synthOn && actx) rebuildPatch(images[index].synth || 'ravier');
+  /* fetch via proxy CORS, fallback direct */
+  fetch(PROXY + encodeURIComponent(entry.url))
+    .then(function(r){ return r.blob(); })
+    .then(function(blob){
+      var burl = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function(){
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+        URL.revokeObjectURL(burl);
+      };
+      img.src = burl;
+    })
+    .catch(function(){
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function(){
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+      };
+      img.src = entry.url;
+    });
+  if (synthOn && actx) rebuildPatch(entry.synth || 'ravier');
 }
 
-document.getElementById('imgBtn').onclick = () => {
-  imgIndex = (imgIndex + 1) % images.length;
-  loadImage(imgIndex, false);
-};
-loadImage(imgIndex, true);
-
-/* ── SYNTHÉTISEUR ───────────────────────────────────────────── */
-let actx = null, synthOn = false;
-let masterGain = null;
-let patchNodes = [];
-let updateFn = null;
-
-function disposeNodes() {
-  patchNodes.forEach(n => { try { n.disconnect(); if (n.stop) n.stop(0); } catch(e){} });
-  patchNodes = [];
-  updateFn = null;
+/* ══ PARAMÈTRES UI ══ */
+function applyParams(p) {
+  scaleY=p.scaleY; scaleX=p.scaleX; rep=p.rep; spd=p.spd; amp=p.amp; dir=p.dir; chaos=p.chaos;
+  document.getElementById('scaleY').value=scaleY;           document.getElementById('scaleYVal').textContent=scaleY.toFixed(2);
+  document.getElementById('scaleX').value=scaleX;           document.getElementById('scaleXVal').textContent=scaleX.toFixed(2);
+  document.getElementById('rep').value=rep;                 document.getElementById('repVal').textContent=(+rep).toFixed(1);
+  document.getElementById('spd').value=spd;                 document.getElementById('spdVal').textContent=(+spd).toFixed(1);
+  document.getElementById('amp').value=amp;                 document.getElementById('ampVal').textContent=(+amp).toFixed(2);
+  document.getElementById('dirBtn').textContent=dir<0.5?'X':'Y';
+  document.getElementById('randomSlider').value=chaos;      document.getElementById('randomVal').textContent=(+chaos).toFixed(2);
 }
 
-function mkNoiseBuf(c) {
-  const len = c.sampleRate * 2;
-  const nb = c.createBuffer(1, len, c.sampleRate);
-  const d = nb.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+document.getElementById('rep').oninput          = function(e){rep=+e.target.value;   document.getElementById('repVal').textContent=(+rep).toFixed(1);};
+document.getElementById('spd').oninput          = function(e){spd=+e.target.value;   document.getElementById('spdVal').textContent=(+spd).toFixed(1);};
+document.getElementById('amp').oninput          = function(e){amp=+e.target.value;   document.getElementById('ampVal').textContent=(+amp).toFixed(2);};
+document.getElementById('scaleX').oninput       = function(e){scaleX=+e.target.value;document.getElementById('scaleXVal').textContent=(+scaleX).toFixed(2);};
+document.getElementById('scaleY').oninput       = function(e){scaleY=+e.target.value;document.getElementById('scaleYVal').textContent=(+scaleY).toFixed(2);};
+document.getElementById('randomSlider').oninput = function(e){chaos=+e.target.value; document.getElementById('randomVal').textContent=(+chaos).toFixed(2);};
+document.getElementById('dirBtn').onclick       = function(){dir=dir<0.5?1:0; document.getElementById('dirBtn').textContent=dir<0.5?'X':'Y';};
+document.getElementById('imgBtn').onclick       = function(){imgIndex=(imgIndex+1)%images.length; loadImage(imgIndex,false);};
+
+/* ══ AUDIO UTILS ══ */
+function mkNoiseBuf(c){
+  var len=c.sampleRate*2, nb=c.createBuffer(1,len,c.sampleRate), d=nb.getChannelData(0);
+  for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
   return nb;
 }
+function disposeNodes(){
+  for(var i=0;i<patchNodes.length;i++){try{patchNodes[i].disconnect();if(patchNodes[i].stop)patchNodes[i].stop(0);}catch(e){}}
+  patchNodes=[]; updateFn=null;
+}
 
-function rebuildPatch(name) {
-  if (!actx || !synthOn) return;
+/* ══ PATCHES ══ */
+function rebuildPatch(name){
+  if(!actx||!synthOn) return;
   disposeNodes();
-  const dest = masterGain;
-  const now = actx.currentTime;
+  var dest=masterGain, now=actx.currentTime;
 
-  /* ── RAVIER : FM 2-op agressif, cuivré, harangue ── */
-  if (name === 'ravier') {
-    const modOsc  = actx.createOscillator(); modOsc.type = 'square';
-    const modGain = actx.createGain();
-    const carrier = actx.createOscillator(); carrier.type = 'sawtooth';
-    const carGain = actx.createGain(); carGain.gain.value = 0.5;
-    const lfo     = actx.createOscillator(); lfo.type = 'triangle'; lfo.frequency.value = 4;
-    const lfoG    = actx.createGain(); lfoG.gain.value = 0;
-    const filt    = actx.createBiquadFilter(); filt.type = 'bandpass'; filt.Q.value = 4;
-    const dist    = actx.createWaveShaper();
-    const dc = new Float32Array(256);
-    for (let i = 0; i < 256; i++) { const x = i/128-1; dc[i] = x < 0 ? -Math.pow(-x,0.6) : Math.pow(x,0.6); }
-    dist.curve = dc;
+  if(name==='ravier'){
+    var modOsc=actx.createOscillator(); modOsc.type='square';
+    var modGain=actx.createGain();
+    var carrier=actx.createOscillator(); carrier.type='sawtooth';
+    var carGain=actx.createGain(); carGain.gain.value=0.5;
+    var lfo=actx.createOscillator(); lfo.type='triangle'; lfo.frequency.value=4;
+    var lfoG=actx.createGain(); lfoG.gain.value=0;
+    var filt=actx.createBiquadFilter(); filt.type='bandpass'; filt.Q.value=4;
+    var dist=actx.createWaveShaper();
+    var dc=new Float32Array(256);
+    for(var i=0;i<256;i++){var x=i/128-1; dc[i]=x<0?-Math.pow(-x,.6):Math.pow(x,.6);}
+    dist.curve=dc;
     modOsc.connect(modGain); modGain.connect(carrier.frequency);
-    carrier.connect(carGain);
-    lfo.connect(lfoG); lfoG.connect(carGain.gain);
+    carrier.connect(carGain); lfo.connect(lfoG); lfoG.connect(carGain.gain);
     carGain.connect(filt); filt.connect(dist); dist.connect(dest);
     modOsc.start(now); carrier.start(now); lfo.start(now);
-    patchNodes = [modOsc, carrier, lfo, modGain, carGain, lfoG, filt, dist];
-    updateFn = () => {
-      const t = actx.currentTime;
-      const fc = 55 * Math.pow(2, rep / 12);
-      const fmRatio = 0.5 + spd * 0.4;
-      carrier.frequency.setTargetAtTime(fc, t, 0.08);
-      modOsc.frequency.setTargetAtTime(fc * fmRatio, t, 0.08);
-      modGain.gain.setTargetAtTime(fc * (0.5 + chaos * 8), t, 0.08);
-      lfo.frequency.setTargetAtTime(0.2 + spd * 0.3, t, 0.08);
-      lfoG.gain.setTargetAtTime(amp * 200, t, 0.06);
-      filt.frequency.setTargetAtTime(200 + scaleY * 1800, t, 0.1);
-      filt.Q.setTargetAtTime(1 + chaos * 12, t, 0.1);
+    patchNodes=[modOsc,carrier,lfo,modGain,carGain,lfoG,filt,dist];
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,rep/12);
+      carrier.frequency.setTargetAtTime(fc,t,.08);
+      modOsc.frequency.setTargetAtTime(fc*(0.5+spd*0.4),t,.08);
+      modGain.gain.setTargetAtTime(fc*(0.5+chaos*8),t,.08);
+      lfo.frequency.setTargetAtTime(0.2+spd*0.3,t,.08);
+      lfoG.gain.setTargetAtTime(amp*200,t,.06);
+      filt.frequency.setTargetAtTime(200+scaleY*1800,t,.1);
+      filt.Q.setTargetAtTime(1+chaos*12,t,.1);
     };
-    document.getElementById('synthInfo').textContent = 'patch : fm 2-op · cuivré · harangue';
+    document.getElementById('synthInfo').textContent='patch : fm 2-op · cuivré · harangue';
 
-  /* ── STEINIGER : Soustractif pur, rigide, parlementaire ── */
-  } else if (name === 'steiniger') {
-    const o1   = actx.createOscillator(); o1.type = 'square';
-    const o2   = actx.createOscillator(); o2.type = 'square';
-    const g1   = actx.createGain(); g1.gain.value = 0.28;
-    const g2   = actx.createGain(); g2.gain.value = 0.28;
-    const filt = actx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 0.7;
-    const lfo  = actx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.3;
-    const lfoG = actx.createGain(); lfoG.gain.value = 0;
-    o1.connect(g1); o2.connect(g2);
-    g1.connect(filt); g2.connect(filt);
-    lfo.connect(lfoG); lfoG.connect(filt.frequency);
-    filt.connect(dest);
+  } else if(name==='steiniger'){
+    var o1=actx.createOscillator(); o1.type='square';
+    var o2=actx.createOscillator(); o2.type='square';
+    var g1=actx.createGain(); g1.gain.value=0.28;
+    var g2=actx.createGain(); g2.gain.value=0.28;
+    var filt=actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=0.7;
+    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.3;
+    var lfoG=actx.createGain(); lfoG.gain.value=0;
+    o1.connect(g1); o2.connect(g2); g1.connect(filt); g2.connect(filt);
+    lfo.connect(lfoG); lfoG.connect(filt.frequency); filt.connect(dest);
     o1.start(now); o2.start(now); lfo.start(now);
-    patchNodes = [o1, o2, lfo, g1, g2, lfoG, filt];
-    updateFn = () => {
-      const t = actx.currentTime;
-      const fc = 55 * Math.pow(2, rep / 12);
-      const detune = (scaleX - 1) * 80;
-      const fmRatio = 0.5 + spd * 0.4;
-      o1.frequency.setTargetAtTime(fc, t, 0.1);
-      o2.frequency.setTargetAtTime(fc * (1 + fmRatio * 0.03), t, 0.1);
-      o1.detune.setTargetAtTime(detune, t, 0.1);
-      o2.detune.setTargetAtTime(-detune, t, 0.1);
-      filt.frequency.setTargetAtTime(300 + scaleY * 1400, t, 0.1);
-      lfo.frequency.setTargetAtTime(0.1 + spd * 0.15, t, 0.1);
-      lfoG.gain.setTargetAtTime(amp * 500, t, 0.07);
-      filt.Q.setTargetAtTime(0.5 + chaos * 6, t, 0.1);
+    patchNodes=[o1,o2,lfo,g1,g2,lfoG,filt];
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), dt=(scaleX-1)*80;
+      o1.frequency.setTargetAtTime(fc,t,.1);
+      o2.frequency.setTargetAtTime(fc*(1+(0.5+spd*0.4)*0.03),t,.1);
+      o1.detune.setTargetAtTime(dt,t,.1); o2.detune.setTargetAtTime(-dt,t,.1);
+      filt.frequency.setTargetAtTime(300+scaleY*1400,t,.1);
+      lfo.frequency.setTargetAtTime(0.1+spd*0.15,t,.1);
+      lfoG.gain.setTargetAtTime(amp*500,t,.07);
+      filt.Q.setTargetAtTime(0.5+chaos*6,t,.1);
     };
-    document.getElementById('synthInfo').textContent = 'patch : soustractif · rigide · parlementaire';
+    document.getElementById('synthInfo').textContent='patch : soustractif · rigide · parlementaire';
 
-  /* ── VAL : Additif harmoniques paires, rhétorique, lisse ── */
-  } else if (name === 'val') {
-    const ratios = [1, 2, 4, 8];
-    const oscs = ratios.map(() => { const o = actx.createOscillator(); o.type = 'sine'; return o; });
-    const gains = ratios.map((_, i) => { const g = actx.createGain(); g.gain.value = 0.22 / (i + 1); return g; });
-    const shelf = actx.createBiquadFilter(); shelf.type = 'highshelf'; shelf.frequency.value = 2000; shelf.gain.value = 6;
-    const lfo   = actx.createOscillator(); lfo.type = 'sine';
-    const lfoG  = actx.createGain(); lfoG.gain.value = 0;
-    oscs.forEach((o, i) => { o.connect(gains[i]); gains[i].connect(shelf); });
-    lfo.connect(lfoG); lfoG.connect(shelf.frequency);
-    shelf.connect(dest);
-    oscs.forEach(o => o.start(now)); lfo.start(now);
-    patchNodes = [...oscs, ...gains, lfo, lfoG, shelf];
-    updateFn = () => {
-      const t = actx.currentTime;
-      const fc = 55 * Math.pow(2, rep / 12);
-      const fmRatio = 0.5 + spd * 0.4;
-      oscs.forEach((o, i) => {
-        const f = fc * ratios[i] * (1 + (i > 0 ? fmRatio * 0.08 * i : 0));
-        o.frequency.setTargetAtTime(f, t, 0.1);
-      });
-      lfo.frequency.setTargetAtTime(0.3 + spd * 0.3, t, 0.1);
-      lfoG.gain.setTargetAtTime(amp * 900, t, 0.07);
-      shelf.frequency.setTargetAtTime(1200 + scaleY * 3000, t, 0.1);
-      shelf.gain.setTargetAtTime(4 + chaos * 20, t, 0.1);
+  } else if(name==='val'){
+    var ratios=[1,2,4,8];
+    var oscs=ratios.map(function(){var o=actx.createOscillator();o.type='sine';return o;});
+    var gains=ratios.map(function(_,i){var g=actx.createGain();g.gain.value=0.22/(i+1);return g;});
+    var shelf=actx.createBiquadFilter(); shelf.type='highshelf'; shelf.frequency.value=2000; shelf.gain.value=6;
+    var lfo=actx.createOscillator(); lfo.type='sine';
+    var lfoG=actx.createGain(); lfoG.gain.value=0;
+    oscs.forEach(function(o,i){o.connect(gains[i]);gains[i].connect(shelf);});
+    lfo.connect(lfoG); lfoG.connect(shelf.frequency); shelf.connect(dest);
+    oscs.forEach(function(o){o.start(now);}); lfo.start(now);
+    patchNodes=oscs.concat(gains).concat([lfo,lfoG,shelf]);
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), fmR=0.5+spd*0.4;
+      oscs.forEach(function(o,i){o.frequency.setTargetAtTime(fc*ratios[i]*(1+(i>0?fmR*.08*i:0)),t,.1);});
+      lfo.frequency.setTargetAtTime(0.3+spd*0.3,t,.1);
+      lfoG.gain.setTargetAtTime(amp*900,t,.07);
+      shelf.frequency.setTargetAtTime(1200+scaleY*3000,t,.1);
+      shelf.gain.setTargetAtTime(4+chaos*20,t,.1);
     };
-    document.getElementById('synthInfo').textContent = 'patch : additif · harmoniques paires · rhétorique';
+    document.getElementById('synthInfo').textContent='patch : additif · harmoniques paires · rhétorique';
 
-  /* ── BLOCHER : Granulaire simulé, tellurique, massif ── */
-  } else if (name === 'blocher') {
-    const sub   = actx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 40;
-    const subG  = actx.createGain(); subG.gain.value = 0.5;
-    const nSrc  = actx.createBufferSource(); nSrc.buffer = mkNoiseBuf(actx); nSrc.loop = true;
-    const nFilt = actx.createBiquadFilter(); nFilt.type = 'bandpass'; nFilt.frequency.value = 120; nFilt.Q.value = 0.5;
-    const nGain = actx.createGain(); nGain.gain.value = 0.2;
-    const comb  = actx.createBiquadFilter(); comb.type = 'lowpass'; comb.frequency.value = 250; comb.Q.value = 3;
-    const lfo   = actx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.06;
-    const lfoG  = actx.createGain(); lfoG.gain.value = 0;
+  } else if(name==='blocher'){
+    var sub=actx.createOscillator(); sub.type='sine'; sub.frequency.value=40;
+    var subG=actx.createGain(); subG.gain.value=0.5;
+    var nSrc=actx.createBufferSource(); nSrc.buffer=mkNoiseBuf(actx); nSrc.loop=true;
+    var nFilt=actx.createBiquadFilter(); nFilt.type='bandpass'; nFilt.frequency.value=120; nFilt.Q.value=0.5;
+    var nGain=actx.createGain(); nGain.gain.value=0.2;
+    var comb=actx.createBiquadFilter(); comb.type='lowpass'; comb.frequency.value=250; comb.Q.value=3;
+    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.06;
+    var lfoG=actx.createGain(); lfoG.gain.value=0;
     sub.connect(subG); subG.connect(comb);
     nSrc.connect(nFilt); nFilt.connect(nGain); nGain.connect(comb);
-    lfo.connect(lfoG); lfoG.connect(comb.frequency);
-    comb.connect(dest);
+    lfo.connect(lfoG); lfoG.connect(comb.frequency); comb.connect(dest);
     sub.start(now); nSrc.start(now); lfo.start(now);
-    patchNodes = [sub, nSrc, lfo, subG, nFilt, nGain, comb, lfoG];
-    updateFn = () => {
-      const t = actx.currentTime;
-      const fc = 30 * Math.pow(2, rep / 18);
-      const fmRatio = 0.5 + spd * 0.4;
-      sub.frequency.setTargetAtTime(fc, t, 0.3);
-      nFilt.frequency.setTargetAtTime(fc * 2 + chaos * 400, t, 0.2);
-      nFilt.Q.setTargetAtTime(0.3 + fmRatio * 2, t, 0.15);
-      comb.frequency.setTargetAtTime(80 + scaleY * 380, t, 0.2);
-      comb.Q.setTargetAtTime(2 + chaos * 10, t, 0.1);
-      lfo.frequency.setTargetAtTime(0.02 + spd * 0.05, t, 0.2);
-      lfoG.gain.setTargetAtTime(amp * 280, t, 0.1);
-      nGain.gain.setTargetAtTime(0.08 + chaos * 0.5, t, 0.1);
+    patchNodes=[sub,nSrc,lfo,subG,nFilt,nGain,comb,lfoG];
+    updateFn=function(){
+      var t=actx.currentTime, fc=30*Math.pow(2,rep/18), fmR=0.5+spd*0.4;
+      sub.frequency.setTargetAtTime(fc,t,.3);
+      nFilt.frequency.setTargetAtTime(fc*2+chaos*400,t,.2);
+      nFilt.Q.setTargetAtTime(0.3+fmR*2,t,.15);
+      comb.frequency.setTargetAtTime(80+scaleY*380,t,.2);
+      comb.Q.setTargetAtTime(2+chaos*10,t,.1);
+      lfo.frequency.setTargetAtTime(0.02+spd*0.05,t,.2);
+      lfoG.gain.setTargetAtTime(amp*280,t,.1);
+      nGain.gain.setTargetAtTime(0.08+chaos*0.5,t,.1);
     };
-    document.getElementById('synthInfo').textContent = 'patch : granulaire simulé · tellurique · massif';
+    document.getElementById('synthInfo').textContent='patch : granulaire simulé · tellurique · massif';
 
-  /* ── LELLOUCHE : FM 3-op feedback, charnel, cinématique ── */
-  } else if (name === 'lellouche') {
-    const op1    = actx.createOscillator(); op1.type = 'sawtooth';
-    const op2    = actx.createOscillator(); op2.type = 'triangle';
-    const op3    = actx.createOscillator(); op3.type = 'sine';
-    const car    = actx.createOscillator(); car.type = 'sine';
-    const g1     = actx.createGain(); g1.gain.value = 0;
-    const g2     = actx.createGain(); g2.gain.value = 0;
-    const g3     = actx.createGain(); g3.gain.value = 0;
-    const gCar   = actx.createGain(); gCar.gain.value = 0.5;
-    const fbG    = actx.createGain(); fbG.gain.value = 0;
-    const lfo    = actx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.7;
-    const lfoMod = actx.createGain(); lfoMod.gain.value = 0;
-    const filt   = actx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 5;
+  } else if(name==='lellouche'){
+    var op1=actx.createOscillator(); op1.type='sawtooth';
+    var op2=actx.createOscillator(); op2.type='triangle';
+    var op3=actx.createOscillator(); op3.type='sine';
+    var car=actx.createOscillator(); car.type='sine';
+    var g1=actx.createGain(); g1.gain.value=0;
+    var g2=actx.createGain(); g2.gain.value=0;
+    var g3=actx.createGain(); g3.gain.value=0;
+    var gCar=actx.createGain(); gCar.gain.value=0.5;
+    var fbG=actx.createGain(); fbG.gain.value=0;
+    var lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.7;
+    var lfoM=actx.createGain(); lfoM.gain.value=0;
+    var filt=actx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=5;
     op1.connect(g1); g1.connect(op2.frequency);
     op2.connect(g2); g2.connect(op3.frequency);
     op3.connect(g3); g3.connect(car.frequency);
     car.connect(gCar);
     op1.connect(fbG); fbG.connect(op1.frequency);
-    lfo.connect(lfoMod);
-    lfoMod.connect(g1.gain); lfoMod.connect(g2.gain); lfoMod.connect(g3.gain);
+    lfo.connect(lfoM);
+    lfoM.connect(g1.gain); lfoM.connect(g2.gain); lfoM.connect(g3.gain);
     gCar.connect(filt); filt.connect(dest);
-    [op1, op2, op3, car, lfo].forEach(o => o.start(now));
-    patchNodes = [op1, op2, op3, car, lfo, g1, g2, g3, gCar, fbG, lfoMod, filt];
-    updateFn = () => {
-      const t = actx.currentTime;
-      const fc = 55 * Math.pow(2, rep / 12);
-      const fmRatio = 0.5 + spd * 0.4;
-      car.frequency.setTargetAtTime(fc, t, 0.08);
-      op3.frequency.setTargetAtTime(fc * fmRatio, t, 0.08);
-      op2.frequency.setTargetAtTime(fc * fmRatio * 1.5, t, 0.08);
-      op1.frequency.setTargetAtTime(fc * fmRatio * 2.3, t, 0.08);
-      const idx = fc * (0.3 + chaos * 5);
-      g1.gain.setTargetAtTime(idx, t, 0.08);
-      g2.gain.setTargetAtTime(idx * 0.6, t, 0.08);
-      g3.gain.setTargetAtTime(idx * 0.3, t, 0.08);
-      lfo.frequency.setTargetAtTime(0.3 + spd * 0.2, t, 0.1);
-      lfoMod.gain.setTargetAtTime(amp * idx * 1.5, t, 0.06);
-      fbG.gain.setTargetAtTime(chaos * 0.45, t, 0.1);
-      filt.frequency.setTargetAtTime(300 + scaleY * 2500, t, 0.1);
-      filt.Q.setTargetAtTime(2 + chaos * 8, t, 0.1);
+    [op1,op2,op3,car,lfo].forEach(function(o){o.start(now);});
+    patchNodes=[op1,op2,op3,car,lfo,g1,g2,g3,gCar,fbG,lfoM,filt];
+    updateFn=function(){
+      var t=actx.currentTime, fc=55*Math.pow(2,rep/12), fmR=0.5+spd*0.4;
+      car.frequency.setTargetAtTime(fc,t,.08);
+      op3.frequency.setTargetAtTime(fc*fmR,t,.08);
+      op2.frequency.setTargetAtTime(fc*fmR*1.5,t,.08);
+      op1.frequency.setTargetAtTime(fc*fmR*2.3,t,.08);
+      var idx=fc*(0.3+chaos*5);
+      g1.gain.setTargetAtTime(idx,t,.08); g2.gain.setTargetAtTime(idx*.6,t,.08); g3.gain.setTargetAtTime(idx*.3,t,.08);
+      lfo.frequency.setTargetAtTime(0.3+spd*0.2,t,.1);
+      lfoM.gain.setTargetAtTime(amp*idx*1.5,t,.06);
+      fbG.gain.setTargetAtTime(chaos*0.45,t,.1);
+      filt.frequency.setTargetAtTime(300+scaleY*2500,t,.1);
+      filt.Q.setTargetAtTime(2+chaos*8,t,.1);
     };
-    document.getElementById('synthInfo').textContent = 'patch : fm 3-op feedback · charnel · cinématique';
+    document.getElementById('synthInfo').textContent='patch : fm 3-op feedback · charnel · cinématique';
   }
 }
 
-function initAudio() {
-  if (actx) return;
-  actx = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = actx.createGain();
-  masterGain.gain.value = 0.5;
+function initAudio(){
+  if(actx) return;
+  actx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=actx.createGain(); masterGain.gain.value=0.5;
   masterGain.connect(actx.destination);
 }
 
-document.getElementById('soundBtn').onclick = () => {
+document.getElementById('soundBtn').onclick=function(){
   initAudio();
-  if (actx.state === 'suspended') actx.resume();
-  synthOn = !synthOn;
-  document.getElementById('soundBtn').classList.toggle('on', synthOn);
-  if (synthOn) {
-    rebuildPatch(images[imgIndex].synth || 'ravier');
-  } else {
-    disposeNodes();
-    document.getElementById('synthInfo').textContent = '';
-  }
+  if(actx.state==='suspended') actx.resume();
+  synthOn=!synthOn;
+  document.getElementById('soundBtn').classList.toggle('on',synthOn);
+  if(synthOn){ rebuildPatch(images[imgIndex].synth||'ravier'); }
+  else { disposeNodes(); document.getElementById('synthInfo').textContent=''; }
 };
 
-/* ── Boucle principale ─────────────────────────────────────── */
-let noiseT = 0;
-function loop() {
-  noiseT += 0.015;
-  const chaosPhase = Math.sin(noiseT * 0.7) * 0.5 + 0.5;
-  const chaosFreq  = Math.sin(noiseT * 0.4 + 1.2) * 0.5 + 0.5;
-  gl.uniform1f(uTime,       performance.now() / 1000);
-  gl.uniform1f(uRep,        Math.max(0.1, rep));
-  gl.uniform1f(uSpd,        spd);
-  gl.uniform1f(uAmp,        Math.max(0, amp));
-  gl.uniform1f(uDir,        dir);
-  gl.uniform1f(uChaos,      chaos);
-  gl.uniform1f(uChaosPhase, chaosPhase);
-  gl.uniform1f(uChaosFreq,  chaosFreq);
-  gl.uniform1f(uScaleX,     scaleX);
-  gl.uniform1f(uScaleY,     scaleY);
-  gl.uniform1f(uScaleXOff,  currentScaleXOffset);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  if (synthOn && actx && updateFn) updateFn();
+/* ══ BOUCLE ══ */
+var noiseT=0;
+function loop(){
+  noiseT+=0.015;
+  gl.uniform1f(uTime,      performance.now()/1000);
+  gl.uniform1f(uRep,       Math.max(0.1,rep));
+  gl.uniform1f(uSpd,       spd);
+  gl.uniform1f(uAmp,       Math.max(0,amp));
+  gl.uniform1f(uDir,       dir);
+  gl.uniform1f(uChaos,     chaos);
+  gl.uniform1f(uChaosPhase,Math.sin(noiseT*0.7)*0.5+0.5);
+  gl.uniform1f(uChaosFreq, Math.sin(noiseT*0.4+1.2)*0.5+0.5);
+  gl.uniform1f(uScaleX,    scaleX);
+  gl.uniform1f(uScaleY,    scaleY);
+  gl.uniform1f(uScaleXOff, currentScaleXOffset);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  if(synthOn&&actx&&updateFn) updateFn();
   requestAnimationFrame(loop);
 }
+
+/* ══ INIT ══ */
+loadImage(imgIndex, true);
 loop();
 </script>
 </body>
