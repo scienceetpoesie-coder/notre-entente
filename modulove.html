@@ -250,6 +250,7 @@ document.getElementById('amp').oninput          = function(e){ gAmp   =+e.target
 document.getElementById('scaleX').oninput       = function(e){ gScaleX=+e.target.value; document.getElementById('scaleXVal').textContent=(+gScaleX).toFixed(2); };
 document.getElementById('scaleY').oninput       = function(e){ gScaleY=+e.target.value; document.getElementById('scaleYVal').textContent=(+gScaleY).toFixed(2); };
 document.getElementById('randomSlider').oninput = function(e){ gChaos =+e.target.value; document.getElementById('randomVal').textContent=(+gChaos).toFixed(2);  };
+document.getElementById('imgBtn').onclick = function(){ imgIndex=(imgIndex+1)%images.length; loadImage(imgIndex,false); };
 
 /* ── X/Y : change forme d'onde à chaud, sans relancer l'enveloppe ── */
 document.getElementById('dirBtn').onclick = function(){
